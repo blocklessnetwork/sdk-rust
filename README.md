@@ -1,1 +1,1 @@
-# blockless-sdk-rust
+# Blockless-sdk-rust
