@@ -1,5 +1,4 @@
 use blockless_sdk::*;
-use json;
 
 fn main() {
     let opts = HttpOptions::new("GET", 30, 10);
