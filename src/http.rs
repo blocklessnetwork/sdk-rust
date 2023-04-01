@@ -32,6 +32,7 @@ impl HttpOptions {
         json["method"] = self.method.clone().into();
         json["connectTimeout"] = self.connect_timeout.into();
         json["readTimeout"] = self.read_timeout.into();
+        json["headers"] = "{}".into();
         json["body"] = self.body.clone().into();
         json.dump()
     }

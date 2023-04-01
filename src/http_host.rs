@@ -1,6 +1,6 @@
 #[link(wasm_import_module = "blockless_http")]
 extern "C" {
-    #[link_name = "http_open"]
+    #[link_name = "http_req"]
     pub(crate) fn http_open(
         url: *const u8,
         url_len: u32,
