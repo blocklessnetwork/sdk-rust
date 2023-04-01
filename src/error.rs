@@ -20,21 +20,21 @@ impl std::error::Error for HttpErrorKind {}
 
 impl std::fmt::Display for HttpErrorKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            &Self::InvalidDriver => write!(f, "Invalid Driver"),
-            &Self::InvalidHandle => write!(f, "Invalid Error"),
-            &Self::MemoryAccessError => write!(f, "Memoery Access Error"),
-            &Self::BufferTooSmall => write!(f, "Buffer too small"),
-            &Self::HeaderNotFound => write!(f, "Header not found"),
-            &Self::Utf8Error => write!(f, "Utf8 error"),
-            &Self::DestinationNotAllowed => write!(f, "Destination not allowed"),
-            &Self::InvalidMethod => write!(f, "Invalid method"),
-            &Self::InvalidEncoding => write!(f, "Invalid encoding"),
-            &Self::InvalidUrl => write!(f, "Invalid url"),
-            &Self::RequestError => write!(f, "Request url"),
-            &Self::RuntimeError => write!(f, "Runtime error"),
-            &Self::TooManySessions => write!(f, "Too many sessions"),
-            &Self::PermissionDeny => write!(f, "Permision deny."),
+        match *self {
+            Self::InvalidDriver => write!(f, "Invalid Driver"),
+            Self::InvalidHandle => write!(f, "Invalid Error"),
+            Self::MemoryAccessError => write!(f, "Memoery Access Error"),
+            Self::BufferTooSmall => write!(f, "Buffer too small"),
+            Self::HeaderNotFound => write!(f, "Header not found"),
+            Self::Utf8Error => write!(f, "Utf8 error"),
+            Self::DestinationNotAllowed => write!(f, "Destination not allowed"),
+            Self::InvalidMethod => write!(f, "Invalid method"),
+            Self::InvalidEncoding => write!(f, "Invalid encoding"),
+            Self::InvalidUrl => write!(f, "Invalid url"),
+            Self::RequestError => write!(f, "Request url"),
+            Self::RuntimeError => write!(f, "Runtime error"),
+            Self::TooManySessions => write!(f, "Too many sessions"),
+            Self::PermissionDeny => write!(f, "Permision deny."),
         }
     }
 }

@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 use crate::{error::HttpErrorKind, http_host::*};
 use json::JsonValue;
 
@@ -82,10 +84,10 @@ impl BlocklessHttp {
             if rs != 0 {
                 return Err(HttpErrorKind::from(rs));
             }
-            if num > 0 {
-                vec.extend_from_slice(&buf[0..num as _]);
-            } else if num == 0 {
-                break;
+
+            match num.cmp(&0) {
+                Ordering::Greater => vec.extend_from_slice(&buf[0..num as _]),
+                _ => break,
             }
         }
         Ok(vec)
@@ -109,10 +111,9 @@ impl BlocklessHttp {
             if rs != 0 {
                 return Err(HttpErrorKind::from(rs));
             }
-            if num > 0 {
-                vec.extend_from_slice(&buf[0..num as _]);
-            } else if num == 0 {
-                break;
+            match num.cmp(&0) {
+                Ordering::Greater => vec.extend_from_slice(&buf[0..num as _]),
+                _ => break,
             }
         }
         String::from_utf8(vec).map_err(|_| HttpErrorKind::Utf8Error)
