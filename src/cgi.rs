@@ -1,6 +1,6 @@
 use std::fmt::{Display, Debug};
 
-use json::{JsonValue, object::Object, Array};
+use json::{JsonValue, object::Object};
 
 use crate::cgi_host::{cgi_close, cgi_list_exec, cgi_list_read, cgi_open, cgi_stderr_read};
 
@@ -111,20 +111,23 @@ pub enum CGIErrorKind {
     JsonDecodingError,
     ExecError,
     StdinReadError,
+    NoCGICommandError,
 }
 
-struct CGIListExtensions(u32);
+pub struct CGIListExtensions{
+    handle:u32,
+}
 
 impl Drop for CGIListExtensions {
     fn drop(&mut self) {
         unsafe {
-            cgi_close(self.0);
+            cgi_close(self.handle);
         }
     }
 }
 
 impl CGIListExtensions {
-    fn new() ->  Result<Self, CGIErrorKind> {
+    pub fn new() ->  Result<Self, CGIErrorKind> {
         let mut cgi_handle: u32 = 0;
         unsafe{
             let rs = cgi_list_exec(&mut cgi_handle as *mut u32);
@@ -132,7 +135,7 @@ impl CGIListExtensions {
                 return Err(CGIErrorKind::ListError);
             }
         };
-        Ok(CGIListExtensions(cgi_handle))
+        Ok(CGIListExtensions{handle: cgi_handle})
     }
 
     fn list_read_all(&self) -> Result<Vec<u8>, CGIErrorKind> {
@@ -141,7 +144,7 @@ impl CGIListExtensions {
         let mut readn = 0u32; 
         loop {
             unsafe {
-                let rs = cgi_list_read(self.0, &mut bs as _, bs.len() as _, &mut readn);
+                let rs = cgi_list_read(self.handle, &mut bs as _, bs.len() as _, &mut readn);
                 if rs != 0 {
                     return Err(CGIErrorKind::ListError);
                 }
@@ -154,7 +157,20 @@ impl CGIListExtensions {
         Ok(data)
     }
 
-    fn list(&self) -> Result<Vec<CGIExtensions>, CGIErrorKind> {
+    pub fn command(&self, command: &str, args: Vec<String>, envs: Vec<CGIEnv>) -> Result<CGICommand, CGIErrorKind> {
+        let extensions = self.list()?;
+        extensions.iter()
+            .find(|ext| {
+                if &ext.alias == command {
+                    true
+                } else {
+                    false
+                }
+            }).map(|_| CGICommand::new(command.to_string(), args, envs))
+            .ok_or(CGIErrorKind::NoCGICommandError)
+    }
+
+    pub fn list(&self) -> Result<Vec<CGIExtensions>, CGIErrorKind> {
         let data = self.list_read_all()?;
         let s = std::str::from_utf8(&data)
             .map_err(|_| CGIErrorKind::EncodingError)?;

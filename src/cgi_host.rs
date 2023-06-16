@@ -1,5 +1,3 @@
-use crate::cgi::CGIErrorKind;
-
 #[link(wasm_import_module = "blockless_cgi")]
 extern "C" {
     #[link_name = "cgi_open"]
