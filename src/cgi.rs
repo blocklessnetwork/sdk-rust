@@ -2,8 +2,15 @@ use std::fmt::{Display, Debug};
 
 use json::{JsonValue, object::Object};
 
-use crate::cgi_host::{cgi_close, cgi_list_exec, cgi_list_read, cgi_open, cgi_stderr_read};
+use crate::cgi_host::{
+    cgi_close, 
+    cgi_list_exec, 
+    cgi_list_read, 
+    cgi_open, 
+    cgi_stdout_read
+};
 
+#[derive(Debug)]
 pub struct CGIExtensions {
     pub file_name: String,
     pub alias: String,
@@ -65,22 +72,23 @@ impl CGICommand {
         let mut bs = [0u8; 1024];
         loop {
             unsafe {
-                let rs = cgi_stderr_read(handle, &mut bs as _, bs.len() as _, &mut readn);
+                let rs = cgi_stdout_read(handle, &mut bs as _, bs.len() as _, &mut readn);
                 if rs != 0 {
                     return Err(CGIErrorKind::StdinReadError);
                 }
                 if readn == 0 {
                     break;
                 }
-                data.copy_from_slice(&bs[..readn as _]);
+                data.extend_from_slice(&bs[..readn as _]);
             }
         }
         Ok(data)
     }
 
-    pub fn exec_command(&mut self) -> Result<Vec<u8>, CGIErrorKind> {
+    pub fn exec_command(&mut self) -> Result<String, CGIErrorKind> {
         self.exec()?;
-        self.read_all_stdin()
+        let bs = self.read_all_stdin()?;
+        String::from_utf8(bs).map_err(|_| CGIErrorKind::EncodingError)
     }
 
     fn json_params(&self) -> String {
@@ -151,7 +159,7 @@ impl CGIListExtensions {
                 if readn == 0 {
                     break;
                 }
-                data.copy_from_slice(&bs[..readn as _]);
+                data.extend_from_slice(&bs[..readn as _]);
             }
         }
         Ok(data)
