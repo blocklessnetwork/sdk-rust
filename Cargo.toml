@@ -6,6 +6,8 @@ description = "blockless sdk"
 keywords = ["blockless", "sdk"]
 readme = "README.md"
 edition = "2021"
+license = "MIT/Apache-2.0"
+repository = "https://github.com/blocklessnetwork/sdk-rust"
 
 [[bin]]
 name = "exam1"
