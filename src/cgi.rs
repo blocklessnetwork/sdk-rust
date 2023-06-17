@@ -7,7 +7,7 @@ use crate::cgi_host::{
     cgi_list_exec, 
     cgi_list_read, 
     cgi_open, 
-    cgi_stdout_read
+    cgi_stdout_read, cgi_stderr_read
 };
 
 #[derive(Debug)]
@@ -39,6 +39,8 @@ pub struct CGICommand {
     handle: Option<u32>
 }
 
+type ReadFn = unsafe extern "C" fn(u32, *mut u8, u32, *mut u32,) -> u32;
+
 impl CGICommand {
     fn new(command: String, args: Vec<String>, envs: Vec<CGIEnv>) -> Self  {
         Self {
@@ -62,7 +64,7 @@ impl CGICommand {
         Ok(())
     }
 
-    pub fn read_all_stdin(&mut self) -> Result<Vec<u8>, CGIErrorKind> {
+    fn read_all(&mut self, read_call: ReadFn) -> Result<Vec<u8>, CGIErrorKind> {
         let mut readn = 0u32; 
         let mut data: Vec<u8> = Vec::new(); 
         if self.handle.is_none() {
@@ -72,9 +74,9 @@ impl CGICommand {
         let mut bs = [0u8; 1024];
         loop {
             unsafe {
-                let rs = cgi_stdout_read(handle, &mut bs as _, bs.len() as _, &mut readn);
+                let rs = read_call(handle, &mut bs as _, bs.len() as _, &mut readn);
                 if rs != 0 {
-                    return Err(CGIErrorKind::StdinReadError);
+                    return Err(CGIErrorKind::ReadError);
                 }
                 if readn == 0 {
                     break;
@@ -83,6 +85,14 @@ impl CGICommand {
             }
         }
         Ok(data)
+    }
+
+    pub fn read_all_stdin(&mut self) -> Result<Vec<u8>, CGIErrorKind> {
+        self.read_all(cgi_stdout_read)
+    }
+
+    pub fn read_all_stderr(&mut self) -> Result<Vec<u8>, CGIErrorKind> {
+        self.read_all(cgi_stderr_read)
     }
 
     pub fn exec_command(&mut self) -> Result<String, CGIErrorKind> {
@@ -118,7 +128,7 @@ pub enum CGIErrorKind {
     EncodingError,
     JsonDecodingError,
     ExecError,
-    StdinReadError,
+    ReadError,
     NoCGICommandError,
 }
 
