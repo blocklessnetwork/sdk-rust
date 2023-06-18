@@ -59,3 +59,49 @@ impl From<u32> for HttpErrorKind {
         }
     }
 }
+
+#[derive(Debug)]
+pub enum SocketErrorKind {
+    ConnectRefused,
+    ParameterError,
+    ConnectionReset,
+    AddressInUse,
+}
+
+impl std::fmt::Display for SocketErrorKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match *self {
+            SocketErrorKind::ConnectRefused => write!(f, "Connect Refused."),
+            SocketErrorKind::ParameterError => write!(f, "Parameter Error."),
+            SocketErrorKind::ConnectionReset => write!(f, "Connection  Reset."),
+            SocketErrorKind::AddressInUse => write!(f, "Address In Use."),
+        }
+    }
+}
+
+impl std::error::Error for SocketErrorKind {}
+
+#[derive(Debug)]
+pub enum CGIErrorKind {
+    ListError,
+    EncodingError,
+    JsonDecodingError,
+    ExecError,
+    ReadError,
+    NoCommandError,
+}
+
+impl std::fmt::Display for CGIErrorKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match *self {
+            CGIErrorKind::ListError => write!(f, "CGI List Error."),
+            CGIErrorKind::EncodingError => write!(f, "CGI Encoding Error."),
+            CGIErrorKind::JsonDecodingError => write!(f, "Json decoding Error."),
+            CGIErrorKind::ExecError => write!(f, "CGI Exec Error."),
+            CGIErrorKind::ReadError => write!(f, "Read Error."),
+            CGIErrorKind::NoCommandError => write!(f, "No CGI Command Error."),
+        }   
+    }
+}
+
+impl std::error::Error for CGIErrorKind {}

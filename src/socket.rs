@@ -1,12 +1,7 @@
-use crate::socket_host::create_tcp_bind_socket_native;
-
-#[derive(Debug)]
-pub enum SocketErrorKind {
-    ConnectRefused,
-    ParameterError,
-    ConnectionReset,
-    AddressInUse,
-}
+use crate::{
+    socket_host::*, 
+    SocketErrorKind
+};
 
 pub fn create_tcp_bind_socket(addr: &str) -> Result<u32, SocketErrorKind> {
     unsafe {

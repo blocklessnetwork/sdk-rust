@@ -73,14 +73,8 @@ impl BlocklessHttp {
         loop {
             let mut buf = [0u8; 1024];
             let mut num: u32 = 0;
-            let rs = unsafe {
-                http_read_body(
-                    self.inner,
-                    buf.as_mut_ptr(),
-                    buf.len() as _,
-                    &mut num,
-                )
-            };
+            let rs =
+                unsafe { http_read_body(self.inner, buf.as_mut_ptr(), buf.len() as _, &mut num) };
             if rs != 0 {
                 return Err(HttpErrorKind::from(rs));
             }
@@ -127,8 +121,7 @@ impl BlocklessHttp {
 
     pub fn read_body(&self, buf: &mut [u8]) -> Result<u32, HttpErrorKind> {
         let mut num: u32 = 0;
-        let rs =
-            unsafe { http_read_body(self.inner, buf.as_mut_ptr(), buf.len() as _, &mut num) };
+        let rs = unsafe { http_read_body(self.inner, buf.as_mut_ptr(), buf.len() as _, &mut num) };
         if rs != 0 {
             return Err(HttpErrorKind::from(rs));
         }
