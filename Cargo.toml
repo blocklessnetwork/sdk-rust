@@ -1,6 +1,6 @@
 [package]
 name = "blockless-sdk"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["Join.G"]
 description = "blockless runtime sdk"
 keywords = ["blockless", "sdk"]
