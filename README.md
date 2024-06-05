@@ -12,7 +12,7 @@
 $ cargo build
 ```
 
-The example 
+HTTP example
 
 ```rust
 use blockless_sdk::*;
@@ -36,4 +36,28 @@ fn main() {
         println!("{:?}", s.as_str());
     });
 }
+```
+
+## Examples
+
+Examples are in the [`examples`](./examples/) directory.
+
+### [Coingecko Oracle](./examples/coingecko_oracle.rs)
+
+```sh
+# Build example
+cargo build --release --target wasm32-wasi --example coingecko_oracle
+
+# Run example with blockless runtime
+echo "bitcoin" | runtime target/wasm32-wasi/release/examples/coingecko_oracle.wasm --permission https://api.coingecko.com/
+```
+
+### [HTTP](./examples/httpbin.rs)
+
+```sh
+# Build example
+cargo build --release --target wasm32-wasi --example httpbin
+
+# Run example with blockless runtime
+runtime target/wasm32-wasi/release/examples/httpbin.wasm --permission http://httpbin.org/anything
 ```
