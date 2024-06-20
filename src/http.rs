@@ -3,20 +3,20 @@ use std::cmp::Ordering;
 use crate::{error::HttpErrorKind, http_host::*};
 use json::JsonValue;
 
-pub type Hanlde = u32;
+pub type Handle = u32;
 
 pub type CodeStatus = u32;
 
 pub struct BlocklessHttp {
-    inner: Hanlde,
+    inner: Handle,
     code: CodeStatus,
 }
 
 pub struct HttpOptions {
-    method: String,
-    connect_timeout: u32,
-    read_timeout: u32,
-    body: Option<String>,
+    pub method: String,
+    pub connect_timeout: u32,
+    pub read_timeout: u32,
+    pub body: Option<String>,
 }
 
 impl HttpOptions {

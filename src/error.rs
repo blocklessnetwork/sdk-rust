@@ -100,7 +100,7 @@ impl std::fmt::Display for CGIErrorKind {
             CGIErrorKind::ExecError => write!(f, "CGI Exec Error."),
             CGIErrorKind::ReadError => write!(f, "Read Error."),
             CGIErrorKind::NoCommandError => write!(f, "No CGI Command Error."),
-        }   
+        }
     }
 }
 
