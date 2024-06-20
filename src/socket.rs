@@ -1,7 +1,4 @@
-use crate::{
-    socket_host::*, 
-    SocketErrorKind
-};
+use crate::{socket_host::*, SocketErrorKind};
 
 pub fn create_tcp_bind_socket(addr: &str) -> Result<u32, SocketErrorKind> {
     unsafe {
