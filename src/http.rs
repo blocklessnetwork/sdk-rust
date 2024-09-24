@@ -1,7 +1,6 @@
-use std::cmp::Ordering;
-
 use crate::{error::HttpErrorKind, http_host::*};
 use json::JsonValue;
+use std::{cmp::Ordering, collections::BTreeMap};
 
 pub type Handle = u32;
 
@@ -17,6 +16,7 @@ pub struct HttpOptions {
     pub connect_timeout: u32,
     pub read_timeout: u32,
     pub body: Option<String>,
+    pub headers: Option<BTreeMap<String, String>>,
 }
 
 impl HttpOptions {
@@ -26,15 +26,27 @@ impl HttpOptions {
             connect_timeout,
             read_timeout,
             body: None,
+            headers: None,
         }
     }
 
     pub fn dump(&self) -> String {
+        // convert BTreeMap to json string
+        let mut headers_str = self
+            .headers
+            .clone()
+            .unwrap_or_default()
+            .iter()
+            .map(|(k, v)| format!("\"{}\":\"{}\"", k, v))
+            .collect::<Vec<String>>()
+            .join(",");
+        headers_str = format!("{{{}}}", headers_str);
+
         let mut json = JsonValue::new_object();
         json["method"] = self.method.clone().into();
         json["connectTimeout"] = self.connect_timeout.into();
         json["readTimeout"] = self.read_timeout.into();
-        json["headers"] = "{}".into();
+        json["headers"] = headers_str.into();
         json["body"] = self.body.clone().into();
         json.dump()
     }
