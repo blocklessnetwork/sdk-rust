@@ -1,4 +1,3 @@
-
 #[link(wasm_import_module = "blockless_memory")]
 extern "C" {
     #[link_name = "memory_read"]
