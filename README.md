@@ -38,6 +38,12 @@ fn main() {
 }
 ```
 
+## Install from [crates.io](https://crates.io/crates/blockless-sdk)
+
+```sh
+cargo add blockless-sdk
+```
+
 ## Examples
 
 Examples are in the [`examples`](./examples/) directory.
