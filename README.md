@@ -65,5 +65,13 @@ echo "bitcoin" | runtime target/wasm32-wasi/release/examples/coingecko_oracle.wa
 cargo build --release --target wasm32-wasi --example httpbin
 
 # Run example with blockless runtime
-runtime target/wasm32-wasi/release/examples/httpbin.wasm --permission http://httpbin.org/anything
+~/.bls/runtime/bls-runtime target/wasm32-wasi/release/examples/httpbin.wasm --permission http://httpbin.org/anything
 ```
+
+## Examples list
+
+| Example | Description |
+| ------- | ----------- |
+| [coingecko_oracle](./examples/coingecko_oracle.rs) | Coingecko Oracle to query price of bitcoin from coingecko |
+| [httpbin](./examples/httpbin.rs) | HTTP to query anything from httpbin |
+| [llm](./examples/llm.rs) | LLM to chat with `Llama-3.1-8B-Instruct-q4f32_1-MLC` and `SmolLM2-1.7B-Instruct-q4f16_1-MLC` models |
