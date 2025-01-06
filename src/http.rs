@@ -140,3 +140,11 @@ impl BlocklessHttp {
         Ok(num)
     }
 }
+
+impl Drop for BlocklessHttp {
+    fn drop(&mut self) {
+        unsafe {
+            http_close(self.inner);
+        }
+    }
+}
