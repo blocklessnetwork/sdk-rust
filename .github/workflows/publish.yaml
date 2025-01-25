@@ -15,9 +15,9 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
             toolchain: stable
-            target: wasm32-wasi
+            target: wasm32-wasip1
             override: true
       - uses: katyo/publish-crates@v2
         with:
             registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-            args: --target wasm32-wasi
+            args: --target wasm32-wasip1

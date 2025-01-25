@@ -52,20 +52,20 @@ Examples are in the [`examples`](./examples/) directory.
 
 ```sh
 # Build example
-cargo build --release --target wasm32-wasi --example coingecko_oracle
+cargo build --release --target wasm32-wasip1 --example coingecko_oracle
 
 # Run example with blockless runtime
-echo "bitcoin" | runtime target/wasm32-wasi/release/examples/coingecko_oracle.wasm --permission https://api.coingecko.com/
+echo "bitcoin" | runtime target/wasm32-wasip1/release/examples/coingecko_oracle.wasm --permission https://api.coingecko.com/
 ```
 
 ### [HTTP](./examples/httpbin.rs)
 
 ```sh
 # Build example
-cargo build --release --target wasm32-wasi --example httpbin
+cargo build --release --target wasm32-wasip1 --example httpbin
 
 # Run example with blockless runtime
-~/.bls/runtime/bls-runtime target/wasm32-wasi/release/examples/httpbin.wasm --permission http://httpbin.org/anything
+~/.bls/runtime/bls-runtime target/wasm32-wasip1/release/examples/httpbin.wasm --permission http://httpbin.org/anything
 ```
 
 ## Examples list
