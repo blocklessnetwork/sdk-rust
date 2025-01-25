@@ -14,6 +14,7 @@ extern "C" {
     fn llm_close(fd: u32) -> i32;
 }
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, Default)]
 pub struct BlocklessLlm {
     inner: Handle,
@@ -21,6 +22,7 @@ pub struct BlocklessLlm {
     options: LlmOptions,
 }
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, PartialEq)]
 pub struct LlmOptions {
     pub system_message: String,
@@ -90,6 +92,10 @@ impl BlocklessLlm {
         let mut llm = Self::default();
         llm.set_model(model_name)?;
         Ok(llm)
+    }
+
+    pub fn inner(&self) -> Handle {
+        self.inner
     }
 
     pub fn get_model(&self) -> Result<String, LlmErrorKind> {
