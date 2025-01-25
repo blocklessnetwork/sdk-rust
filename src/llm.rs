@@ -94,7 +94,7 @@ impl BlocklessLlm {
         Ok(llm)
     }
 
-    pub fn inner(&self) -> Handle {
+    pub fn handle(&self) -> Handle {
         self.inner
     }
 
