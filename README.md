@@ -70,8 +70,8 @@ cargo build --release --target wasm32-wasi --example httpbin
 
 ## Examples list
 
-| Example | Description |
-| ------- | ----------- |
-| [coingecko_oracle](./examples/coingecko_oracle.rs) | Coingecko Oracle to query price of bitcoin from coingecko |
-| [httpbin](./examples/httpbin.rs) | HTTP to query anything from httpbin |
-| [llm](./examples/llm.rs) | LLM to chat with `Llama-3.1-8B-Instruct-q4f32_1-MLC` and `SmolLM2-1.7B-Instruct-q4f16_1-MLC` models |
+| Example | Description | [Browser runtime](https://github.com/blocklessnetwork/b7s-browser) support | [Native runtime](https://github.com/blessnetwork/bls-runtime) support |
+| ------- | ----------- | --------------- | --------------- |
+| [coingecko_oracle](./examples/coingecko_oracle.rs) | Coingecko Oracle to query price of bitcoin from coingecko | ✅ | ✅ |
+| [httpbin](./examples/httpbin.rs) | HTTP to query anything from httpbin | ✅ | ✅ |
+| [llm](./examples/llm.rs) | LLM to chat with `Llama-3.1-8B-Instruct-q4f32_1-MLC` and `SmolLM2-1.7B-Instruct-q4f16_1-MLC` models | ✅ | ❌ |
