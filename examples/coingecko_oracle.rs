@@ -1,9 +1,9 @@
 use blockless_sdk::*;
-use serde::Serialize;
 use serde_json::json;
 use std::collections::HashMap;
 
-#[derive(Debug, Serialize)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+#[derive(Debug)]
 struct CoinPrice {
     id: String,
     price: u64,
