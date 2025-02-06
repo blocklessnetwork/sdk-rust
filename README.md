@@ -1,18 +1,18 @@
-# Blockless-sdk-rust
+# Blockless SDK for Rust
 
 ![](blockless.png)
 
-### How to build
+### How to Build the Project
 
-1. Install the rust with rustup, please visit the site 'https://rustup.rs/'.
+1. Install Rust using rustup by visiting the website [https://rustup.rs/](https://rustup.rs/).
 
-2. Use follow command for build the project.
+2. To build the project, use the following command:
 
 ```bash
 $ cargo build
 ```
 
-HTTP example
+### HTTP Example
 
 ```rust
 use blockless_sdk::*;
@@ -26,11 +26,11 @@ fn main() {
     let body = String::from_utf8(body).unwrap();
     let tokens = match json::parse(&body).unwrap() {
         json::JsonValue::Object(o) => o,
-        _ => panic!("must be object"),
+        _ => panic!("Expected an object"),
     };
     let tokens = match tokens.get("tokens") {
         Some(json::JsonValue::Array(tokens)) => tokens,
-        _ => panic!("must be array"),
+        _ => panic!("Expected an array"),
     };
     tokens.iter().for_each(|s| {
         println!("{:?}", s.as_str());
@@ -38,7 +38,7 @@ fn main() {
 }
 ```
 
-## Install from [crates.io](https://crates.io/crates/blockless-sdk)
+## Install via [crates.io](https://crates.io/crates/blockless-sdk)
 
 ```sh
 cargo add blockless-sdk
@@ -46,32 +46,32 @@ cargo add blockless-sdk
 
 ## Examples
 
-Examples are in the [`examples`](./examples/) directory.
+Examples can be found in the [`examples`](./examples/) directory.
 
 ### [Coingecko Oracle](./examples/coingecko_oracle.rs)
 
 ```sh
-# Build example
+# Build the example
 cargo build --release --target wasm32-wasip1 --example coingecko_oracle
 
-# Run example with blockless runtime
+# Run the example with the Blockless runtime
 echo "bitcoin" | runtime target/wasm32-wasip1/release/examples/coingecko_oracle.wasm --permission https://api.coingecko.com/
 ```
 
 ### [HTTP](./examples/httpbin.rs)
 
 ```sh
-# Build example
+# Build the example
 cargo build --release --target wasm32-wasip1 --example httpbin
 
-# Run example with blockless runtime
+# Run the example with the Blockless runtime
 ~/.bls/runtime/bls-runtime target/wasm32-wasip1/release/examples/httpbin.wasm --permission http://httpbin.org/anything
 ```
 
-## Examples list
+## Examples List
 
-| Example | Description | [Browser runtime](https://github.com/blocklessnetwork/b7s-browser) support | [Native runtime](https://github.com/blessnetwork/bls-runtime) support |
-| ------- | ----------- | --------------- | --------------- |
-| [coingecko_oracle](./examples/coingecko_oracle.rs) | Coingecko Oracle to query price of bitcoin from coingecko | ✅ | ✅ |
+| Example | Description | [Browser Runtime Support](https://github.com/blocklessnetwork/b7s-browser) | [Native Runtime Support](https://github.com/blessnetwork/bls-runtime) |
+| ------- | ----------- | ---------------------------------------------------- | -------------------------------- |
+| [coingecko_oracle](./examples/coingecko_oracle.rs) | Coingecko Oracle to query Bitcoin price from Coingecko | ✅ | ✅ |
 | [httpbin](./examples/httpbin.rs) | HTTP to query anything from httpbin | ✅ | ✅ |
 | [llm](./examples/llm.rs) | LLM to chat with `Llama-3.1-8B-Instruct-q4f32_1-MLC` and `SmolLM2-1.7B-Instruct-q4f16_1-MLC` models | ✅ | ❌ |
