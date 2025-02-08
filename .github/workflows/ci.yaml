@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  format-build-test:
+  format-build:
     runs-on: ubuntu-latest
     steps:
       - name: Check out
