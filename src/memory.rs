@@ -6,7 +6,6 @@ extern "C" {
     pub(crate) fn env_var_read(buf: *mut u8, len: u32, num: *mut u32) -> u32;
 }
 
-
 pub fn read_stdin(buf: &mut [u8]) -> std::io::Result<u32> {
     let mut len = 0;
     let errno = unsafe { memory_read(buf.as_mut_ptr(), buf.len() as _, &mut len) };

@@ -1,6 +1,6 @@
-use std::fmt::{Debug, Display};
-use json::{object::Object, JsonValue};
 use crate::CGIErrorKind;
+use json::{object::Object, JsonValue};
+use std::fmt::{Debug, Display};
 
 #[link(wasm_import_module = "blockless_cgi")]
 extern "C" {

@@ -6,11 +6,30 @@ type ExitCode = u8;
 #[link(wasm_import_module = "blockless_llm")]
 extern "C" {
     fn llm_set_model_request(h: *mut Handle, model_ptr: *const u8, model_len: u8) -> ExitCode;
-    fn llm_get_model_response(h: Handle, buf: *mut u8, buf_len: u8, bytes_written: *mut u8) -> ExitCode;
-    fn llm_set_model_options_request(h: Handle, options_ptr: *const u8, options_len: u16) -> ExitCode;
-    fn llm_get_model_options(h: Handle, buf: *mut u8, buf_len: u16, bytes_written: *mut u16) -> ExitCode;
+    fn llm_get_model_response(
+        h: Handle,
+        buf: *mut u8,
+        buf_len: u8,
+        bytes_written: *mut u8,
+    ) -> ExitCode;
+    fn llm_set_model_options_request(
+        h: Handle,
+        options_ptr: *const u8,
+        options_len: u16,
+    ) -> ExitCode;
+    fn llm_get_model_options(
+        h: Handle,
+        buf: *mut u8,
+        buf_len: u16,
+        bytes_written: *mut u16,
+    ) -> ExitCode;
     fn llm_prompt_request(h: Handle, prompt_ptr: *const u8, prompt_len: u16) -> ExitCode;
-    fn llm_read_prompt_response(h: Handle, buf: *mut u8, buf_len: u16, bytes_written: *mut u16) -> ExitCode;
+    fn llm_read_prompt_response(
+        h: Handle,
+        buf: *mut u8,
+        buf_len: u16,
+        bytes_written: *mut u16,
+    ) -> ExitCode;
     fn llm_close(h: Handle) -> ExitCode;
 }
 
@@ -159,7 +178,11 @@ impl BlocklessLlm {
         let options_json = options.dump();
         self.options = options;
         let code = unsafe {
-            llm_set_model_options_request(self.inner, options_json.as_ptr(), options_json.len() as _)
+            llm_set_model_options_request(
+                self.inner,
+                options_json.as_ptr(),
+                options_json.len() as _,
+            )
         };
         if code != 0 {
             return Err(code.into());

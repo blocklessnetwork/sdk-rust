@@ -31,7 +31,6 @@ extern "C" {
     pub(crate) fn http_close(handle: u32) -> u32;
 }
 
-
 type Handle = u32;
 type ExitCode = u32;
 
