@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  format-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.84.0
+        with:
+          toolchain: stable
+          targets: wasm32-wasip1
+          components: rustfmt
+      - name: Format
+        run: |
+          cargo -V
+          cargo fmt --all -- --check
+      - name: Check
+        run: |
+          cargo -V
+          cargo check --release --all --all-features

@@ -1,17 +1,36 @@
 use json::JsonValue;
-use std::cmp::Ordering;
 
-pub type Handle = u32;
+type Handle = u32;
+type ExitCode = u8;
 
 #[link(wasm_import_module = "blockless_llm")]
 extern "C" {
-    fn llm_set_model_request(model_ptr: *const u8, model_len: u32, fd: *mut u32) -> i32;
-    fn llm_get_model_response(buf: *mut u8, size: u32, num: *mut u32, fd: u32) -> i32;
-    fn llm_set_model_options_request(options_ptr: *const u8, options_len: u32, fd: u32) -> i32;
-    fn llm_get_model_options(buf: *mut u8, size: u32, num: *mut u32, fd: u32) -> i32;
-    fn llm_prompt_request(prompt_ptr: *const u8, prompt_len: u32, fd: u32) -> i32;
-    fn llm_read_prompt_response(buf: *mut u8, size: u32, num: *mut u32, fd: u32) -> i32;
-    fn llm_close(fd: u32) -> i32;
+    fn llm_set_model_request(h: *mut Handle, model_ptr: *const u8, model_len: u8) -> ExitCode;
+    fn llm_get_model_response(
+        h: Handle,
+        buf: *mut u8,
+        buf_len: u8,
+        bytes_written: *mut u8,
+    ) -> ExitCode;
+    fn llm_set_model_options_request(
+        h: Handle,
+        options_ptr: *const u8,
+        options_len: u16,
+    ) -> ExitCode;
+    fn llm_get_model_options(
+        h: Handle,
+        buf: *mut u8,
+        buf_len: u16,
+        bytes_written: *mut u16,
+    ) -> ExitCode;
+    fn llm_prompt_request(h: Handle, prompt_ptr: *const u8, prompt_len: u16) -> ExitCode;
+    fn llm_read_prompt_response(
+        h: Handle,
+        buf: *mut u8,
+        buf_len: u16,
+        bytes_written: *mut u16,
+    ) -> ExitCode;
+    fn llm_close(h: Handle) -> ExitCode;
 }
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -49,8 +68,7 @@ impl LlmOptions {
     pub fn new() -> Self {
         Self::default()
     }
-
-    pub fn dump(&self) -> String {
+    pub fn dump(&self) -> Vec<u8> {
         let mut json = JsonValue::new_object();
         json["system_message"] = self.system_message.clone().into();
         if let Some(temperature) = self.temperature {
@@ -59,7 +77,17 @@ impl LlmOptions {
         if let Some(top_p) = self.top_p {
             json["top_p"] = top_p.into();
         }
-        json.dump()
+        json.dump().into_bytes()
+    }
+}
+
+impl std::fmt::Display for LlmOptions {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let bytes = self.dump();
+        match String::from_utf8(bytes) {
+            Ok(s) => write!(f, "{}", s),
+            Err(_) => write!(f, "<invalid utf8>"),
+        }
     }
 }
 
@@ -99,34 +127,33 @@ impl BlocklessLlm {
     }
 
     pub fn get_model(&self) -> Result<String, LlmErrorKind> {
-        let mut buf = [0u8; 256];
-        let mut num: u32 = 0;
-        let rs = unsafe {
-            llm_get_model_response(buf.as_mut_ptr(), buf.len() as _, &mut num, self.inner)
+        let mut buf = [0u8; u8::MAX as usize];
+        let mut num_bytes: u8 = 0;
+        let code = unsafe {
+            llm_get_model_response(self.inner, buf.as_mut_ptr(), buf.len() as _, &mut num_bytes)
         };
-        if rs != 0 {
-            return Err(LlmErrorKind::from(rs));
+        if code != 0 {
+            return Err(code.into());
         }
-        let model = String::from_utf8(buf[0..num as _].to_vec()).unwrap();
+        let model = String::from_utf8(buf[0..num_bytes as _].to_vec()).unwrap();
         Ok(model)
     }
 
     pub fn set_model(&mut self, model_name: &str) -> Result<(), LlmErrorKind> {
         self.model_name = model_name.to_string();
-        // handle (self.inner set from runtime)
-        let rs = unsafe {
-            llm_set_model_request(model_name.as_ptr(), model_name.len() as _, &mut self.inner)
+        let code = unsafe {
+            llm_set_model_request(&mut self.inner, model_name.as_ptr(), model_name.len() as _)
         };
-        if rs != 0 {
-            return Err(LlmErrorKind::from(rs));
+        if code != 0 {
+            return Err(code.into());
         }
 
         // validate model is set correctly in host/runtime
-        if self.model_name != self.get_model()? {
+        let host_model = self.get_model()?;
+        if self.model_name != host_model {
             eprintln!(
                 "Model not set correctly in host/runtime; model_name: {}, model_from_host: {}",
-                self.model_name,
-                self.get_model()?
+                self.model_name, host_model
             );
             return Err(LlmErrorKind::ModelNotSet);
         }
@@ -134,32 +161,31 @@ impl BlocklessLlm {
     }
 
     pub fn get_options(&self) -> Result<LlmOptions, LlmErrorKind> {
-        let mut buf = [0u8; 256];
-        let mut num: u32 = 0;
-        let rs = unsafe {
-            llm_get_model_options(buf.as_mut_ptr(), buf.len() as _, &mut num, self.inner)
+        let mut buf = [0u8; u16::MAX as usize];
+        let mut num_bytes: u16 = 0;
+        let code = unsafe {
+            llm_get_model_options(self.inner, buf.as_mut_ptr(), buf.len() as _, &mut num_bytes)
         };
-        if rs != 0 {
-            println!("Error getting model options: {}", rs);
-            return Err(LlmErrorKind::from(rs));
+        if code != 0 {
+            return Err(code.into());
         }
 
         // Convert buffer slice to Vec<u8> and try to parse into LlmOptions
-        LlmOptions::try_from(buf[0..num as usize].to_vec())
+        LlmOptions::try_from(buf[0..num_bytes as usize].to_vec())
     }
 
     pub fn set_options(&mut self, options: LlmOptions) -> Result<(), LlmErrorKind> {
         let options_json = options.dump();
         self.options = options;
-        let rs = unsafe {
+        let code = unsafe {
             llm_set_model_options_request(
+                self.inner,
                 options_json.as_ptr(),
                 options_json.len() as _,
-                self.inner,
             )
         };
-        if rs != 0 {
-            return Err(LlmErrorKind::from(rs));
+        if code != 0 {
+            return Err(code.into());
         }
 
         // Verify options were set correctly
@@ -171,15 +197,14 @@ impl BlocklessLlm {
             );
             return Err(LlmErrorKind::OptionsNotSet);
         }
-
         Ok(())
     }
 
     pub fn chat_request(&self, prompt: &str) -> Result<String, LlmErrorKind> {
         // Perform the prompt request
-        let rs = unsafe { llm_prompt_request(prompt.as_ptr(), prompt.len() as _, self.inner) };
-        if rs != 0 {
-            return Err(LlmErrorKind::from(rs));
+        let code = unsafe { llm_prompt_request(self.inner, prompt.as_ptr(), prompt.len() as _) };
+        if code != 0 {
+            return Err(code.into());
         }
 
         // Read the response
@@ -187,24 +212,17 @@ impl BlocklessLlm {
     }
 
     fn get_chat_response(&self) -> Result<String, LlmErrorKind> {
-        let mut vec = Vec::new();
-        loop {
-            let mut buf = [0u8; 4096]; // Larger buffer for LLM responses
-            let mut num: u32 = 0;
-            let rs = unsafe {
-                llm_read_prompt_response(buf.as_mut_ptr(), buf.len() as _, &mut num, self.inner)
-            };
-
-            if rs != 0 {
-                return Err(LlmErrorKind::from(rs));
-            }
-
-            match num.cmp(&0) {
-                Ordering::Greater => vec.extend_from_slice(&buf[0..num as _]),
-                _ => break,
-            }
+        let mut buf = [0u8; u16::MAX as usize];
+        let mut num_bytes: u16 = 0;
+        let code = unsafe {
+            llm_read_prompt_response(self.inner, buf.as_mut_ptr(), buf.len() as _, &mut num_bytes)
+        };
+        if code != 0 {
+            return Err(code.into());
         }
-        String::from_utf8(vec).map_err(|_| LlmErrorKind::Utf8Error)
+
+        let response_vec = buf[0..num_bytes as usize].to_vec();
+        String::from_utf8(response_vec).map_err(|_| LlmErrorKind::Utf8Error)
     }
 
     // TODO: response streaming - not yet supported
@@ -225,8 +243,9 @@ impl BlocklessLlm {
 
 impl Drop for BlocklessLlm {
     fn drop(&mut self) {
-        unsafe {
-            llm_close(self.inner);
+        let code = unsafe { llm_close(self.inner) };
+        if code != 0 {
+            eprintln!("Error closing LLM: {}", code);
         }
     }
 }
@@ -236,11 +255,11 @@ pub enum LlmErrorKind {
     ModelNotSet,
     OptionsNotSet,
     Utf8Error,
-    Unknown(i32),
+    Unknown(u8),
 }
 
-impl From<i32> for LlmErrorKind {
-    fn from(code: i32) -> Self {
+impl From<u8> for LlmErrorKind {
+    fn from(code: u8) -> Self {
         match code {
             1 => LlmErrorKind::ModelNotSet,
             2 => LlmErrorKind::OptionsNotSet,
