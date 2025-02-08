@@ -1,14 +1,43 @@
-use crate::{error::HttpErrorKind, http_host::*};
+use crate::error::HttpErrorKind;
 use json::JsonValue;
 use std::{cmp::Ordering, collections::BTreeMap};
 
-pub type Handle = u32;
+#[link(wasm_import_module = "blockless_http")]
+extern "C" {
+    #[link_name = "http_req"]
+    pub(crate) fn http_open(
+        url: *const u8,
+        url_len: u32,
+        opts: *const u8,
+        opts_len: u32,
+        fd: *mut u32,
+        status: *mut u32,
+    ) -> u32;
 
-pub type CodeStatus = u32;
+    #[link_name = "http_read_header"]
+    pub(crate) fn http_read_header(
+        handle: u32,
+        header: *const u8,
+        header_len: u32,
+        buf: *mut u8,
+        buf_len: u32,
+        num: *mut u32,
+    ) -> u32;
+
+    #[link_name = "http_read_body"]
+    pub(crate) fn http_read_body(handle: u32, buf: *mut u8, buf_len: u32, num: *mut u32) -> u32;
+
+    #[link_name = "http_close"]
+    pub(crate) fn http_close(handle: u32) -> u32;
+}
+
+
+type Handle = u32;
+type ExitCode = u32;
 
 pub struct BlocklessHttp {
     inner: Handle,
-    code: CodeStatus,
+    code: ExitCode,
 }
 
 pub struct HttpOptions {
@@ -76,7 +105,7 @@ impl BlocklessHttp {
         })
     }
 
-    pub fn get_code(&self) -> CodeStatus {
+    pub fn get_code(&self) -> ExitCode {
         self.code
     }
 
