@@ -55,13 +55,13 @@ fn main() {
     let response = llm.chat_request("What is your name?").unwrap();
     println!("LLM Response: {}", response);
 
-    // // For streaming responses, you can use read_response_chunk
-    // // let mut buf = [0u8; 4096];
-    // // while let Ok(num) = llm.read_response_chunk(&mut buf) {
-    // //     if num == 0 {
-    // //         break;
-    // //     }
-    // //     let chunk = String::from_utf8_lossy(&buf[..num as usize]);
-    // //     println!("Chunk: {}", chunk);
-    // // }
+    // For streaming responses, you can use read_response_chunk
+    // let mut buf = [0u8; 4096];
+    // while let Ok(num) = llm.read_response_chunk(&mut buf) {
+    //     if num == 0 {
+    //         break;
+    //     }
+    //     let chunk = String::from_utf8_lossy(&buf[..num as usize]);
+    //     println!("Chunk: {}", chunk);
+    // }
 }
