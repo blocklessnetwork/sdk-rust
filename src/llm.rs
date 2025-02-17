@@ -127,7 +127,7 @@ pub struct BlocklessLlm {
 }
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct LlmOptions {
     pub system_message: String,
     // pub max_tokens: u32,
@@ -135,18 +135,6 @@ pub struct LlmOptions {
     pub top_p: Option<f32>,
     // pub frequency_penalty: f32,
     // pub presence_penalty: f32,
-}
-
-impl Default for LlmOptions {
-    fn default() -> Self {
-        LlmOptions {
-            system_message: String::new(),
-            temperature: None,
-            top_p: None,
-            // frequency_penalty: 0.0,
-            // presence_penalty: 0.0,
-        }
-    }
 }
 
 impl LlmOptions {
@@ -184,12 +172,12 @@ impl TryFrom<Vec<u8>> for LlmOptions {
         let json_str = String::from_utf8(bytes).map_err(|_| LlmErrorKind::Utf8Error)?;
 
         // Parse the JSON string
-        let json = json::parse(&json_str).map_err(|_| LlmErrorKind::OptionsNotSet)?;
+        let json = json::parse(&json_str).map_err(|_| LlmErrorKind::ModelOptionsNotSet)?;
 
         // Extract system_message
         let system_message = json["system_message"]
             .as_str()
-            .ok_or(LlmErrorKind::OptionsNotSet)?
+            .ok_or(LlmErrorKind::ModelOptionsNotSet)?
             .to_string();
 
         Ok(LlmOptions {
@@ -201,9 +189,10 @@ impl TryFrom<Vec<u8>> for LlmOptions {
 }
 
 impl BlocklessLlm {
-    pub fn new(model_name: &str) -> Result<Self, LlmErrorKind> {
-        let mut llm = Self::default();
-        llm.set_model(model_name)?;
+    pub fn new(model: SupportedModels) -> Result<Self, LlmErrorKind> {
+        let model_name = model.to_string();
+        let mut llm: BlocklessLlm = Default::default();
+        llm.set_model(&model_name)?;
         Ok(llm)
     }
 
@@ -280,7 +269,7 @@ impl BlocklessLlm {
                 "Options not set correctly in host/runtime; options: {:?}, options_from_host: {:?}",
                 self.options, host_options
             );
-            return Err(LlmErrorKind::OptionsNotSet);
+            return Err(LlmErrorKind::ModelOptionsNotSet);
         }
         Ok(())
     }
@@ -309,21 +298,6 @@ impl BlocklessLlm {
         let response_vec = buf[0..num_bytes as usize].to_vec();
         String::from_utf8(response_vec).map_err(|_| LlmErrorKind::Utf8Error)
     }
-
-    // TODO: response streaming - not yet supported
-    // - read next available chunks
-    // - block until chunk is read, repeat until no more chunks
-    // pub fn read_response_chunk(&self, buf: &mut [u8]) -> Result<u32, LlmErrorKind> {
-    //     let mut num: u32 = 0;
-    //     let rs = unsafe {
-    //         llm_read_prompt_response(self.inner, buf.as_mut_ptr(), buf.len() as _, &mut num)
-    //     };
-
-    //     if rs != 0 {
-    //         return Err(LlmErrorKind::from(rs));
-    //     }
-    //     Ok(num)
-    // }
 }
 
 impl Drop for BlocklessLlm {
@@ -337,19 +311,27 @@ impl Drop for BlocklessLlm {
 
 #[derive(Debug)]
 pub enum LlmErrorKind {
-    ModelNotSet,
-    OptionsNotSet,
-    Utf8Error,
-    Unknown(u8),
+    ModelNotSet,               // 1
+    ModelNotSupported,         // 2
+    ModelInitializationFailed, // 3
+    ModelCompletionFailed,     // 4
+    ModelOptionsNotSet,        // 5
+    ModelShutdownFailed,       // 6
+    Utf8Error,                 // 7
+    RuntimeError,              // 8
 }
 
 impl From<u8> for LlmErrorKind {
     fn from(code: u8) -> Self {
         match code {
             1 => LlmErrorKind::ModelNotSet,
-            2 => LlmErrorKind::OptionsNotSet,
-            3 => LlmErrorKind::Utf8Error,
-            _ => LlmErrorKind::Unknown(code),
+            2 => LlmErrorKind::ModelNotSupported,
+            3 => LlmErrorKind::ModelInitializationFailed,
+            4 => LlmErrorKind::ModelCompletionFailed,
+            5 => LlmErrorKind::ModelOptionsNotSet,
+            6 => LlmErrorKind::ModelShutdownFailed,
+            7 => LlmErrorKind::Utf8Error,
+            _ => LlmErrorKind::RuntimeError,
         }
     }
 }
