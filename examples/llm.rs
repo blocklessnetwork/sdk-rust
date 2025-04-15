@@ -18,12 +18,7 @@ fn main() {
     First time I ask, you name will be lucy.
     Second time I ask, you name will be bob.
     "#;
-    llm.set_options(LlmOptions {
-        system_message: prompt.to_string(),
-        top_p: Some(0.5),
-        ..Default::default()
-    })
-    .unwrap();
+    llm.set_options(LlmOptions::default().with_system_message(prompt.to_string())).unwrap();
 
     let response = llm.chat_request("What is your name?").unwrap();
     println!("llm Response: {}", response);
@@ -33,13 +28,7 @@ fn main() {
     First time I ask, you name will be daisy.
     Second time I ask, you name will be hector.
     "#;
-    llm_small
-        .set_options(LlmOptions {
-            system_message: prompt_smol.to_string(),
-            top_p: Some(0.5),
-            ..Default::default()
-        })
-        .unwrap();
+    llm_small.set_options(LlmOptions::default().with_system_message(prompt_smol.to_string())).unwrap();
 
     let response = llm_small.chat_request("What is your name?").unwrap();
     println!("llm_small Response: {}", response);
