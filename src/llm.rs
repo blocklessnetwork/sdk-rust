@@ -196,9 +196,7 @@ impl TryFrom<Vec<u8>> for LlmOptions {
         let json = json::parse(&json_str).map_err(|_| LlmErrorKind::ModelOptionsNotSet)?;
 
         // Extract system_message
-        let system_message = json["system_message"]
-            .as_str()
-            .map(|s| s.to_string());
+        let system_message = json["system_message"].as_str().map(|s| s.to_string());
 
         // Extract tools_sse_urls
         let tools_sse_urls = json["tools_sse_urls"]
