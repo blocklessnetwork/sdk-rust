@@ -68,10 +68,22 @@ cargo build --release --target wasm32-wasip1 --example httpbin
 ~/.bls/runtime/bls-runtime target/wasm32-wasip1/release/examples/httpbin.wasm --permission http://httpbin.org/anything
 ```
 
+### [LLM-MCP](./examples/llm-mcp.rs)
+
+```sh
+# Build example
+cargo build --release --target wasm32-wasip1 --example llm-mcp
+
+# Run example with blockless runtime and tool servers running
+# Make sure you have the tool servers running on ports 3001 and 3002
+~/.bls/runtime/bls-runtime target/wasm32-wasip1/release/examples/llm-mcp.wasm
+```
+
 ## Examples list
 
 | Example | Description | [Browser runtime](https://github.com/blocklessnetwork/b7s-browser) support | [Native runtime](https://github.com/blessnetwork/bls-runtime) support |
 | ------- | ----------- | --------------- | --------------- |
 | [coingecko_oracle](./examples/coingecko_oracle.rs) | Coingecko Oracle to query price of bitcoin from coingecko | ✅ | ✅ |
 | [httpbin](./examples/httpbin.rs) | HTTP to query anything from httpbin | ✅ | ✅ |
-| [llm](./examples/llm.rs) | LLM to chat with `Llama-3.1-8B-Instruct-q4f32_1-MLC` and `SmolLM2-1.7B-Instruct-q4f16_1-MLC` models | ✅ | ❌ |
+| [llm](./examples/llm.rs) | LLM to chat with `Llama-3.1-8B-Instruct-q4f32_1-MLC` and `SmolLM2-1.7B-Instruct-q4f16_1-MLC` models | ✅ | ✅ |
+| [llm-mcp](./examples/llm-mcp.rs) | LLM with MCP (Model Control Protocol) demonstrating tool integration using SSE endpoints | ✅ | ❌ |
