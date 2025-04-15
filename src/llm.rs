@@ -43,6 +43,7 @@ pub enum SupportedModels {
     Gemma22BInstruct(Option<String>),
     Gemma27BInstruct(Option<String>),
     Gemma29BInstruct(Option<String>),
+    Custom(String),
 }
 
 impl FromStr for SupportedModels {
@@ -99,7 +100,7 @@ impl FromStr for SupportedModels {
                 SupportedModels::Gemma29BInstruct(Some("q4f16_1".to_string())),
             ),
 
-            _ => Err(format!("Unsupported model: {}", s)),
+            _ => Ok(SupportedModels::Custom(s.to_string())),
         }
     }
 }
@@ -114,6 +115,7 @@ impl std::fmt::Display for SupportedModels {
             SupportedModels::Gemma22BInstruct(_) => write!(f, "gemma-2-2b-it"),
             SupportedModels::Gemma27BInstruct(_) => write!(f, "gemma-2-27b-it"),
             SupportedModels::Gemma29BInstruct(_) => write!(f, "gemma-2-9b-it"),
+            SupportedModels::Custom(s) => write!(f, "{}", s),
         }
     }
 }
@@ -130,6 +132,7 @@ pub struct BlocklessLlm {
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct LlmOptions {
     pub system_message: String,
+    pub tools_sse_urls: Vec<String>,
     // pub max_tokens: u32,
     pub temperature: Option<f32>,
     pub top_p: Option<f32>,
@@ -144,6 +147,9 @@ impl LlmOptions {
     pub fn dump(&self) -> Vec<u8> {
         let mut json = JsonValue::new_object();
         json["system_message"] = self.system_message.clone().into();
+        if !self.tools_sse_urls.is_empty() {
+            json["tools_sse_urls"] = self.tools_sse_urls.clone().into();
+        }
         if let Some(temperature) = self.temperature {
             json["temperature"] = temperature.into();
         }
@@ -180,8 +186,14 @@ impl TryFrom<Vec<u8>> for LlmOptions {
             .ok_or(LlmErrorKind::ModelOptionsNotSet)?
             .to_string();
 
+        let tools_sse_urls = json["tools_sse_urls"]
+            .as_str()
+            .map(|s| s.split(',').map(|s| s.trim().to_string()).collect())
+            .unwrap_or_default();
+
         Ok(LlmOptions {
             system_message,
+            tools_sse_urls,
             temperature: json["temperature"].as_f32(),
             top_p: json["top_p"].as_f32(),
         })
