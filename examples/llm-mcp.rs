@@ -13,13 +13,10 @@ fn main() {
     // Assume we have two tools running on different ports
     // 1. http://localhost:3001/sse - add
     // 2. http://localhost:3002/sse - multiply
-    llm.set_options(LlmOptions {
-        tools_sse_urls: vec![
-            "http://localhost:3001/sse".to_string(),
-            "http://localhost:3002/sse".to_string(),
-        ],
-        ..Default::default()
-    })
+    llm.set_options(LlmOptions::default().with_tools_sse_urls(vec![
+        "http://localhost:3001/sse".to_string(),
+        "http://localhost:3002/sse".to_string(),
+    ]))
     .unwrap();
 
     let response = llm
