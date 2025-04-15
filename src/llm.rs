@@ -131,31 +131,46 @@ pub struct BlocklessLlm {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct LlmOptions {
-    pub system_message: String,
-    pub tools_sse_urls: Vec<String>,
-    // pub max_tokens: u32,
+    pub system_message: Option<String>,
+    pub tools_sse_urls: Option<Vec<String>>,
     pub temperature: Option<f32>,
     pub top_p: Option<f32>,
-    // pub frequency_penalty: f32,
-    // pub presence_penalty: f32,
 }
 
 impl LlmOptions {
-    pub fn new() -> Self {
-        Self::default()
+    pub fn with_system_message(mut self, system_message: String) -> Self {
+        self.system_message = Some(system_message);
+        self
     }
-    pub fn dump(&self) -> Vec<u8> {
+
+    pub fn with_tools_sse_urls(mut self, tools_sse_urls: Vec<String>) -> Self {
+        self.tools_sse_urls = Some(tools_sse_urls);
+        self
+    }
+
+    fn dump(&self) -> Vec<u8> {
         let mut json = JsonValue::new_object();
-        json["system_message"] = self.system_message.clone().into();
-        if !self.tools_sse_urls.is_empty() {
-            json["tools_sse_urls"] = self.tools_sse_urls.clone().into();
+
+        if let Some(system_message) = &self.system_message {
+            json["system_message"] = system_message.clone().into();
         }
+
+        if let Some(tools_sse_urls) = &self.tools_sse_urls {
+            json["tools_sse_urls"] = tools_sse_urls.clone().into();
+        }
+
         if let Some(temperature) = self.temperature {
             json["temperature"] = temperature.into();
         }
         if let Some(top_p) = self.top_p {
             json["top_p"] = top_p.into();
         }
+
+        // If json is empty, return an empty JSON object
+        if json.entries().count() == 0 {
+            return "{}".as_bytes().to_vec();
+        }
+
         json.dump().into_bytes()
     }
 }
@@ -183,17 +198,16 @@ impl TryFrom<Vec<u8>> for LlmOptions {
         // Extract system_message
         let system_message = json["system_message"]
             .as_str()
-            .ok_or(LlmErrorKind::ModelOptionsNotSet)?
-            .to_string();
+            .map(|s| s.to_string());
 
+        // Extract tools_sse_urls
         let tools_sse_urls = json["tools_sse_urls"]
             .as_str()
-            .map(|s| s.split(',').map(|s| s.trim().to_string()).collect())
-            .unwrap_or_default();
+            .map(|s| s.split(',').map(|s| s.trim().to_string()).collect());
 
         Ok(LlmOptions {
-            system_message,
-            tools_sse_urls,
+            system_message: system_message,
+            tools_sse_urls: tools_sse_urls,
             temperature: json["temperature"].as_f32(),
             top_p: json["top_p"].as_f32(),
         })
