@@ -57,9 +57,9 @@ impl FromStr for Models {
             | "Llama-3.2-1B-Instruct.Q6_K" => {
                 Ok(Models::Llama321BInstruct(Some("Q6_K".to_string())))
             }
-            "Llama-3.2-1B-Instruct-q4f16_1" | "Llama-3.2-1B-Instruct.q4f16_1" => Ok(
-                Models::Llama321BInstruct(Some("q4f16_1".to_string())),
-            ),
+            "Llama-3.2-1B-Instruct-q4f16_1" | "Llama-3.2-1B-Instruct.q4f16_1" => {
+                Ok(Models::Llama321BInstruct(Some("q4f16_1".to_string())))
+            }
 
             // Llama 3.2 3B
             "Llama-3.2-3B-Instruct" => Ok(Models::Llama323BInstruct(None)),
@@ -68,37 +68,37 @@ impl FromStr for Models {
             | "Llama-3.2-3B-Instruct.Q6_K" => {
                 Ok(Models::Llama323BInstruct(Some("Q6_K".to_string())))
             }
-            "Llama-3.2-3B-Instruct-q4f16_1" | "Llama-3.2-3B-Instruct.q4f16_1" => Ok(
-                Models::Llama323BInstruct(Some("q4f16_1".to_string())),
-            ),
+            "Llama-3.2-3B-Instruct-q4f16_1" | "Llama-3.2-3B-Instruct.q4f16_1" => {
+                Ok(Models::Llama323BInstruct(Some("q4f16_1".to_string())))
+            }
 
             // Mistral 7B
             "Mistral-7B-Instruct-v0.3" => Ok(Models::Mistral7BInstructV03(None)),
-            "Mistral-7B-Instruct-v0.3-q4f16_1" | "Mistral-7B-Instruct-v0.3.q4f16_1" => Ok(
-                Models::Mistral7BInstructV03(Some("q4f16_1".to_string())),
-            ),
+            "Mistral-7B-Instruct-v0.3-q4f16_1" | "Mistral-7B-Instruct-v0.3.q4f16_1" => {
+                Ok(Models::Mistral7BInstructV03(Some("q4f16_1".to_string())))
+            }
 
             // Mixtral 8x7B
             "Mixtral-8x7B-Instruct-v0.1" => Ok(Models::Mixtral8x7BInstructV01(None)),
-            "Mixtral-8x7B-Instruct-v0.1-q4f16_1" | "Mixtral-8x7B-Instruct-v0.1.q4f16_1" => Ok(
-                Models::Mixtral8x7BInstructV01(Some("q4f16_1".to_string())),
-            ),
+            "Mixtral-8x7B-Instruct-v0.1-q4f16_1" | "Mixtral-8x7B-Instruct-v0.1.q4f16_1" => {
+                Ok(Models::Mixtral8x7BInstructV01(Some("q4f16_1".to_string())))
+            }
 
             // Gemma models
             "gemma-2-2b-it" => Ok(Models::Gemma22BInstruct(None)),
-            "gemma-2-2b-it-q4f16_1" | "gemma-2-2b-it.q4f16_1" => Ok(
-                Models::Gemma22BInstruct(Some("q4f16_1".to_string())),
-            ),
+            "gemma-2-2b-it-q4f16_1" | "gemma-2-2b-it.q4f16_1" => {
+                Ok(Models::Gemma22BInstruct(Some("q4f16_1".to_string())))
+            }
 
             "gemma-2-27b-it" => Ok(Models::Gemma27BInstruct(None)),
-            "gemma-2-27b-it-q4f16_1" | "gemma-2-27b-it.q4f16_1" => Ok(
-                Models::Gemma27BInstruct(Some("q4f16_1".to_string())),
-            ),
+            "gemma-2-27b-it-q4f16_1" | "gemma-2-27b-it.q4f16_1" => {
+                Ok(Models::Gemma27BInstruct(Some("q4f16_1".to_string())))
+            }
 
             "gemma-2-9b-it" => Ok(Models::Gemma29BInstruct(None)),
-            "gemma-2-9b-it-q4f16_1" | "gemma-2-9b-it.q4f16_1" => Ok(
-                Models::Gemma29BInstruct(Some("q4f16_1".to_string())),
-            ),
+            "gemma-2-9b-it-q4f16_1" | "gemma-2-9b-it.q4f16_1" => {
+                Ok(Models::Gemma29BInstruct(Some("q4f16_1".to_string())))
+            }
             _ => Ok(Models::Custom(s.to_string())),
         }
     }
