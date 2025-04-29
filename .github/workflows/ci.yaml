@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  format-build:
+  format-check-build:
     runs-on: ubuntu-latest
     steps:
       - name: Check out
