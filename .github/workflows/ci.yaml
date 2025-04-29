@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.84.0
+      - uses: dtolnay/rust-toolchain@1.85.0
         with:
           toolchain: stable
           targets: wasm32-wasip1
