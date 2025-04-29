@@ -8,22 +8,18 @@ use blockless_sdk::*;
 /// demonstrating how the same instance maintains state between requests.
 fn main() {
     // large model
-    let mut llm = BlocklessLlm::new(SupportedModels::Mistral7BInstructV03(None)).unwrap();
+    let mut llm = BlocklessLlm::new(Models::Mistral7BInstructV03(None)).unwrap();
 
     // small model
-    let mut llm_small = BlocklessLlm::new(SupportedModels::Llama321BInstruct(None)).unwrap();
+    let mut llm_small = BlocklessLlm::new(Models::Llama321BInstruct(None)).unwrap();
 
     let prompt = r#"
     You are a helpful assistant.
     First time I ask, you name will be lucy.
     Second time I ask, you name will be bob.
     "#;
-    llm.set_options(LlmOptions {
-        system_message: prompt.to_string(),
-        top_p: Some(0.5),
-        ..Default::default()
-    })
-    .unwrap();
+    llm.set_options(LlmOptions::default().with_system_message(prompt.to_string()))
+        .unwrap();
 
     let response = llm.chat_request("What is your name?").unwrap();
     println!("llm Response: {}", response);
@@ -34,11 +30,7 @@ fn main() {
     Second time I ask, you name will be hector.
     "#;
     llm_small
-        .set_options(LlmOptions {
-            system_message: prompt_smol.to_string(),
-            top_p: Some(0.5),
-            ..Default::default()
-        })
+        .set_options(LlmOptions::default().with_system_message(prompt_smol.to_string()))
         .unwrap();
 
     let response = llm_small.chat_request("What is your name?").unwrap();

@@ -35,7 +35,7 @@ extern "C" {
 }
 
 #[derive(Debug, Clone)]
-pub enum SupportedModels {
+pub enum Models {
     Llama321BInstruct(Option<String>),
     Llama323BInstruct(Option<String>),
     Mistral7BInstructV03(Option<String>),
@@ -43,77 +43,78 @@ pub enum SupportedModels {
     Gemma22BInstruct(Option<String>),
     Gemma27BInstruct(Option<String>),
     Gemma29BInstruct(Option<String>),
+    Custom(String),
 }
 
-impl FromStr for SupportedModels {
+impl FromStr for Models {
     type Err = String;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             // Llama 3.2 1B
-            "Llama-3.2-1B-Instruct" => Ok(SupportedModels::Llama321BInstruct(None)),
+            "Llama-3.2-1B-Instruct" => Ok(Models::Llama321BInstruct(None)),
             "Llama-3.2-1B-Instruct-Q6_K"
             | "Llama-3.2-1B-Instruct_Q6_K"
             | "Llama-3.2-1B-Instruct.Q6_K" => {
-                Ok(SupportedModels::Llama321BInstruct(Some("Q6_K".to_string())))
+                Ok(Models::Llama321BInstruct(Some("Q6_K".to_string())))
             }
-            "Llama-3.2-1B-Instruct-q4f16_1" | "Llama-3.2-1B-Instruct.q4f16_1" => Ok(
-                SupportedModels::Llama321BInstruct(Some("q4f16_1".to_string())),
-            ),
+            "Llama-3.2-1B-Instruct-q4f16_1" | "Llama-3.2-1B-Instruct.q4f16_1" => {
+                Ok(Models::Llama321BInstruct(Some("q4f16_1".to_string())))
+            }
 
             // Llama 3.2 3B
-            "Llama-3.2-3B-Instruct" => Ok(SupportedModels::Llama323BInstruct(None)),
+            "Llama-3.2-3B-Instruct" => Ok(Models::Llama323BInstruct(None)),
             "Llama-3.2-3B-Instruct-Q6_K"
             | "Llama-3.2-3B-Instruct_Q6_K"
             | "Llama-3.2-3B-Instruct.Q6_K" => {
-                Ok(SupportedModels::Llama323BInstruct(Some("Q6_K".to_string())))
+                Ok(Models::Llama323BInstruct(Some("Q6_K".to_string())))
             }
-            "Llama-3.2-3B-Instruct-q4f16_1" | "Llama-3.2-3B-Instruct.q4f16_1" => Ok(
-                SupportedModels::Llama323BInstruct(Some("q4f16_1".to_string())),
-            ),
+            "Llama-3.2-3B-Instruct-q4f16_1" | "Llama-3.2-3B-Instruct.q4f16_1" => {
+                Ok(Models::Llama323BInstruct(Some("q4f16_1".to_string())))
+            }
 
             // Mistral 7B
-            "Mistral-7B-Instruct-v0.3" => Ok(SupportedModels::Mistral7BInstructV03(None)),
-            "Mistral-7B-Instruct-v0.3-q4f16_1" | "Mistral-7B-Instruct-v0.3.q4f16_1" => Ok(
-                SupportedModels::Mistral7BInstructV03(Some("q4f16_1".to_string())),
-            ),
+            "Mistral-7B-Instruct-v0.3" => Ok(Models::Mistral7BInstructV03(None)),
+            "Mistral-7B-Instruct-v0.3-q4f16_1" | "Mistral-7B-Instruct-v0.3.q4f16_1" => {
+                Ok(Models::Mistral7BInstructV03(Some("q4f16_1".to_string())))
+            }
 
             // Mixtral 8x7B
-            "Mixtral-8x7B-Instruct-v0.1" => Ok(SupportedModels::Mixtral8x7BInstructV01(None)),
-            "Mixtral-8x7B-Instruct-v0.1-q4f16_1" | "Mixtral-8x7B-Instruct-v0.1.q4f16_1" => Ok(
-                SupportedModels::Mixtral8x7BInstructV01(Some("q4f16_1".to_string())),
-            ),
+            "Mixtral-8x7B-Instruct-v0.1" => Ok(Models::Mixtral8x7BInstructV01(None)),
+            "Mixtral-8x7B-Instruct-v0.1-q4f16_1" | "Mixtral-8x7B-Instruct-v0.1.q4f16_1" => {
+                Ok(Models::Mixtral8x7BInstructV01(Some("q4f16_1".to_string())))
+            }
 
             // Gemma models
-            "gemma-2-2b-it" => Ok(SupportedModels::Gemma22BInstruct(None)),
-            "gemma-2-2b-it-q4f16_1" | "gemma-2-2b-it.q4f16_1" => Ok(
-                SupportedModels::Gemma22BInstruct(Some("q4f16_1".to_string())),
-            ),
+            "gemma-2-2b-it" => Ok(Models::Gemma22BInstruct(None)),
+            "gemma-2-2b-it-q4f16_1" | "gemma-2-2b-it.q4f16_1" => {
+                Ok(Models::Gemma22BInstruct(Some("q4f16_1".to_string())))
+            }
 
-            "gemma-2-27b-it" => Ok(SupportedModels::Gemma27BInstruct(None)),
-            "gemma-2-27b-it-q4f16_1" | "gemma-2-27b-it.q4f16_1" => Ok(
-                SupportedModels::Gemma27BInstruct(Some("q4f16_1".to_string())),
-            ),
+            "gemma-2-27b-it" => Ok(Models::Gemma27BInstruct(None)),
+            "gemma-2-27b-it-q4f16_1" | "gemma-2-27b-it.q4f16_1" => {
+                Ok(Models::Gemma27BInstruct(Some("q4f16_1".to_string())))
+            }
 
-            "gemma-2-9b-it" => Ok(SupportedModels::Gemma29BInstruct(None)),
-            "gemma-2-9b-it-q4f16_1" | "gemma-2-9b-it.q4f16_1" => Ok(
-                SupportedModels::Gemma29BInstruct(Some("q4f16_1".to_string())),
-            ),
-
-            _ => Err(format!("Unsupported model: {}", s)),
+            "gemma-2-9b-it" => Ok(Models::Gemma29BInstruct(None)),
+            "gemma-2-9b-it-q4f16_1" | "gemma-2-9b-it.q4f16_1" => {
+                Ok(Models::Gemma29BInstruct(Some("q4f16_1".to_string())))
+            }
+            _ => Ok(Models::Custom(s.to_string())),
         }
     }
 }
 
-impl std::fmt::Display for SupportedModels {
+impl std::fmt::Display for Models {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            SupportedModels::Llama321BInstruct(_) => write!(f, "Llama-3.2-1B-Instruct"),
-            SupportedModels::Llama323BInstruct(_) => write!(f, "Llama-3.2-3B-Instruct"),
-            SupportedModels::Mistral7BInstructV03(_) => write!(f, "Mistral-7B-Instruct-v0.3"),
-            SupportedModels::Mixtral8x7BInstructV01(_) => write!(f, "Mixtral-8x7B-Instruct-v0.1"),
-            SupportedModels::Gemma22BInstruct(_) => write!(f, "gemma-2-2b-it"),
-            SupportedModels::Gemma27BInstruct(_) => write!(f, "gemma-2-27b-it"),
-            SupportedModels::Gemma29BInstruct(_) => write!(f, "gemma-2-9b-it"),
+            Models::Llama321BInstruct(_) => write!(f, "Llama-3.2-1B-Instruct"),
+            Models::Llama323BInstruct(_) => write!(f, "Llama-3.2-3B-Instruct"),
+            Models::Mistral7BInstructV03(_) => write!(f, "Mistral-7B-Instruct-v0.3"),
+            Models::Mixtral8x7BInstructV01(_) => write!(f, "Mixtral-8x7B-Instruct-v0.1"),
+            Models::Gemma22BInstruct(_) => write!(f, "gemma-2-2b-it"),
+            Models::Gemma27BInstruct(_) => write!(f, "gemma-2-27b-it"),
+            Models::Gemma29BInstruct(_) => write!(f, "gemma-2-9b-it"),
+            Models::Custom(s) => write!(f, "{}", s),
         }
     }
 }
@@ -129,27 +130,46 @@ pub struct BlocklessLlm {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct LlmOptions {
-    pub system_message: String,
-    // pub max_tokens: u32,
+    pub system_message: Option<String>,
+    pub tools_sse_urls: Option<Vec<String>>,
     pub temperature: Option<f32>,
     pub top_p: Option<f32>,
-    // pub frequency_penalty: f32,
-    // pub presence_penalty: f32,
 }
 
 impl LlmOptions {
-    pub fn new() -> Self {
-        Self::default()
+    pub fn with_system_message(mut self, system_message: String) -> Self {
+        self.system_message = Some(system_message);
+        self
     }
-    pub fn dump(&self) -> Vec<u8> {
+
+    pub fn with_tools_sse_urls(mut self, tools_sse_urls: Vec<String>) -> Self {
+        self.tools_sse_urls = Some(tools_sse_urls);
+        self
+    }
+
+    fn dump(&self) -> Vec<u8> {
         let mut json = JsonValue::new_object();
-        json["system_message"] = self.system_message.clone().into();
+
+        if let Some(system_message) = &self.system_message {
+            json["system_message"] = system_message.clone().into();
+        }
+
+        if let Some(tools_sse_urls) = &self.tools_sse_urls {
+            json["tools_sse_urls"] = tools_sse_urls.clone().into();
+        }
+
         if let Some(temperature) = self.temperature {
             json["temperature"] = temperature.into();
         }
         if let Some(top_p) = self.top_p {
             json["top_p"] = top_p.into();
         }
+
+        // If json is empty, return an empty JSON object
+        if json.entries().count() == 0 {
+            return "{}".as_bytes().to_vec();
+        }
+
         json.dump().into_bytes()
     }
 }
@@ -175,13 +195,26 @@ impl TryFrom<Vec<u8>> for LlmOptions {
         let json = json::parse(&json_str).map_err(|_| LlmErrorKind::ModelOptionsNotSet)?;
 
         // Extract system_message
-        let system_message = json["system_message"]
-            .as_str()
-            .ok_or(LlmErrorKind::ModelOptionsNotSet)?
-            .to_string();
+        let system_message = json["system_message"].as_str().map(|s| s.to_string());
+
+        // Extract tools_sse_urls - can be an array or a comma-separated string
+        let tools_sse_urls = if json["tools_sse_urls"].is_array() {
+            // Handle array format - native runtime
+            Some(
+                json["tools_sse_urls"]
+                    .members()
+                    .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                    .collect(),
+            )
+        } else {
+            json["tools_sse_urls"]
+                .as_str()
+                .map(|s| s.split(',').map(|s| s.trim().to_string()).collect())
+        };
 
         Ok(LlmOptions {
             system_message,
+            tools_sse_urls,
             temperature: json["temperature"].as_f32(),
             top_p: json["top_p"].as_f32(),
         })
@@ -189,7 +222,7 @@ impl TryFrom<Vec<u8>> for LlmOptions {
 }
 
 impl BlocklessLlm {
-    pub fn new(model: SupportedModels) -> Result<Self, LlmErrorKind> {
+    pub fn new(model: Models) -> Result<Self, LlmErrorKind> {
         let model_name = model.to_string();
         let mut llm: BlocklessLlm = Default::default();
         llm.set_model(&model_name)?;
@@ -319,6 +352,7 @@ pub enum LlmErrorKind {
     ModelShutdownFailed,       // 6
     Utf8Error,                 // 7
     RuntimeError,              // 8
+    MCPFunctionCallError,      // 9
 }
 
 impl From<u8> for LlmErrorKind {
@@ -331,6 +365,8 @@ impl From<u8> for LlmErrorKind {
             5 => LlmErrorKind::ModelOptionsNotSet,
             6 => LlmErrorKind::ModelShutdownFailed,
             7 => LlmErrorKind::Utf8Error,
+            // 8 => LlmErrorKind::RuntimeError,
+            9 => LlmErrorKind::MCPFunctionCallError,
             _ => LlmErrorKind::RuntimeError,
         }
     }
