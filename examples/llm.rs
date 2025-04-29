@@ -6,7 +6,6 @@ use blockless_sdk::*;
 /// Each model is configured with a system message that changes the assistant's name.
 /// The example then sends chat requests to both models and prints their responses,
 /// demonstrating how the same instance maintains state between requests.
-
 fn main() {
     // large model
     let mut llm = BlocklessLlm::new(SupportedModels::Mistral7BInstructV03(None)).unwrap();

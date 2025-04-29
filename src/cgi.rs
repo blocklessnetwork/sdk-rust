@@ -197,7 +197,7 @@ impl CGIListExtensions {
         let extensions = self.list()?;
         extensions
             .iter()
-            .find(|ext| if &ext.alias == command { true } else { false })
+            .find(|ext| ext.alias == command)
             .map(|_| CGICommand::new(command.to_string(), args, envs))
             .ok_or(CGIErrorKind::NoCommandError)
     }

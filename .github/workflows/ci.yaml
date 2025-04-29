@@ -6,21 +6,19 @@ on:
       - main
 
 jobs:
-  format-build:
+  check-clippy-build:
     runs-on: ubuntu-latest
     steps:
       - name: Check out
         uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.84.0
+      - uses: dtolnay/rust-toolchain@1.85.0
         with:
           toolchain: stable
           targets: wasm32-wasip1
-          components: rustfmt
+          components: rustfmt,clippy
       - name: Format
-        run: |
-          cargo -V
-          cargo fmt --all -- --check
+        run: cargo fmt --all -- --check
+      - name: Clippy
+        run: cargo clippy --all-features --all-targets -- -D warnings
       - name: Check
-        run: |
-          cargo -V
-          cargo check --release --all --all-features
+        run: cargo check --release --all --all-features
