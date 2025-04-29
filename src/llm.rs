@@ -342,6 +342,7 @@ pub enum LlmErrorKind {
     ModelShutdownFailed,       // 6
     Utf8Error,                 // 7
     RuntimeError,              // 8
+    MCPFunctionCallError,      // 9
 }
 
 impl From<u8> for LlmErrorKind {
@@ -354,6 +355,8 @@ impl From<u8> for LlmErrorKind {
             5 => LlmErrorKind::ModelOptionsNotSet,
             6 => LlmErrorKind::ModelShutdownFailed,
             7 => LlmErrorKind::Utf8Error,
+            // 8 => LlmErrorKind::RuntimeError,
+            9 => LlmErrorKind::MCPFunctionCallError,
             _ => LlmErrorKind::RuntimeError,
         }
     }
