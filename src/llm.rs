@@ -197,10 +197,21 @@ impl TryFrom<Vec<u8>> for LlmOptions {
         // Extract system_message
         let system_message = json["system_message"].as_str().map(|s| s.to_string());
 
-        // Extract tools_sse_urls
-        let tools_sse_urls = json["tools_sse_urls"]
-            .as_str()
-            .map(|s| s.split(',').map(|s| s.trim().to_string()).collect());
+        // Extract tools_sse_urls - can be an array or a comma-separated string
+        let tools_sse_urls = if json["tools_sse_urls"].is_array() {
+            // Handle array format - native runtime
+            Some(
+                json["tools_sse_urls"]
+                    .members()
+                    .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                    .collect(),
+            )
+        } else if let Some(s) = json["tools_sse_urls"].as_str() {
+            // Handle comma-separated string format - Browser runtime
+            Some(s.split(',').map(|s| s.trim().to_string()).collect())
+        } else {
+            None
+        };
 
         Ok(LlmOptions {
             system_message: system_message,
