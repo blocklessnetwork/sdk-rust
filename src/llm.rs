@@ -104,16 +104,16 @@ impl FromStr for SupportedModels {
     }
 }
 
-impl ToString for SupportedModels {
-    fn to_string(&self) -> String {
+impl std::fmt::Display for SupportedModels {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            SupportedModels::Llama321BInstruct(_) => "Llama-3.2-1B-Instruct".to_string(),
-            SupportedModels::Llama323BInstruct(_) => "Llama-3.2-3B-Instruct".to_string(),
-            SupportedModels::Mistral7BInstructV03(_) => "Mistral-7B-Instruct-v0.3".to_string(),
-            SupportedModels::Mixtral8x7BInstructV01(_) => "Mixtral-8x7B-Instruct-v0.1".to_string(),
-            SupportedModels::Gemma22BInstruct(_) => "gemma-2-2b-it".to_string(),
-            SupportedModels::Gemma27BInstruct(_) => "gemma-2-27b-it".to_string(),
-            SupportedModels::Gemma29BInstruct(_) => "gemma-2-9b-it".to_string(),
+            SupportedModels::Llama321BInstruct(_) => write!(f, "Llama-3.2-1B-Instruct"),
+            SupportedModels::Llama323BInstruct(_) => write!(f, "Llama-3.2-3B-Instruct"),
+            SupportedModels::Mistral7BInstructV03(_) => write!(f, "Mistral-7B-Instruct-v0.3"),
+            SupportedModels::Mixtral8x7BInstructV01(_) => write!(f, "Mixtral-8x7B-Instruct-v0.1"),
+            SupportedModels::Gemma22BInstruct(_) => write!(f, "gemma-2-2b-it"),
+            SupportedModels::Gemma27BInstruct(_) => write!(f, "gemma-2-27b-it"),
+            SupportedModels::Gemma29BInstruct(_) => write!(f, "gemma-2-9b-it"),
         }
     }
 }
