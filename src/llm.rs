@@ -207,7 +207,9 @@ impl TryFrom<Vec<u8>> for LlmOptions {
                     .collect(),
             )
         } else {
-            json["tools_sse_urls"].as_str().map(|s| s.split(',').map(|s| s.trim().to_string()).collect())
+            json["tools_sse_urls"]
+                .as_str()
+                .map(|s| s.split(',').map(|s| s.trim().to_string()).collect())
         };
 
         Ok(LlmOptions {
