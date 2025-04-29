@@ -2,10 +2,10 @@ use blockless_sdk::*;
 
 /// This example demonstrates how to use the Blockless SDK to interact with two different LLM models
 /// and use MCP to call the tools.
-
 fn main() {
     // large model
     let mut llm = BlocklessLlm::new(Models::Custom(
+        "Llama-3.1-8B-Instruct-q4f16_1-MLC".to_string(),
     ))
     .unwrap();
 
