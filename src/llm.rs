@@ -206,16 +206,13 @@ impl TryFrom<Vec<u8>> for LlmOptions {
                     .filter_map(|v| v.as_str().map(|s| s.to_string()))
                     .collect(),
             )
-        } else if let Some(s) = json["tools_sse_urls"].as_str() {
-            // Handle comma-separated string format - Browser runtime
-            Some(s.split(',').map(|s| s.trim().to_string()).collect())
         } else {
-            None
+            json["tools_sse_urls"].as_str().map(|s| s.split(',').map(|s| s.trim().to_string()).collect())
         };
 
         Ok(LlmOptions {
-            system_message: system_message,
-            tools_sse_urls: tools_sse_urls,
+            system_message,
+            tools_sse_urls,
             temperature: json["temperature"].as_f32(),
             top_p: json["top_p"].as_f32(),
         })
