@@ -35,7 +35,7 @@ extern "C" {
 }
 
 #[derive(Debug, Clone)]
-pub enum SupportedModels {
+pub enum Models {
     Llama321BInstruct(Option<String>),
     Llama323BInstruct(Option<String>),
     Mistral7BInstructV03(Option<String>),
@@ -46,76 +46,75 @@ pub enum SupportedModels {
     Custom(String),
 }
 
-impl FromStr for SupportedModels {
+impl FromStr for Models {
     type Err = String;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             // Llama 3.2 1B
-            "Llama-3.2-1B-Instruct" => Ok(SupportedModels::Llama321BInstruct(None)),
+            "Llama-3.2-1B-Instruct" => Ok(Models::Llama321BInstruct(None)),
             "Llama-3.2-1B-Instruct-Q6_K"
             | "Llama-3.2-1B-Instruct_Q6_K"
             | "Llama-3.2-1B-Instruct.Q6_K" => {
-                Ok(SupportedModels::Llama321BInstruct(Some("Q6_K".to_string())))
+                Ok(Models::Llama321BInstruct(Some("Q6_K".to_string())))
             }
             "Llama-3.2-1B-Instruct-q4f16_1" | "Llama-3.2-1B-Instruct.q4f16_1" => Ok(
-                SupportedModels::Llama321BInstruct(Some("q4f16_1".to_string())),
+                Models::Llama321BInstruct(Some("q4f16_1".to_string())),
             ),
 
             // Llama 3.2 3B
-            "Llama-3.2-3B-Instruct" => Ok(SupportedModels::Llama323BInstruct(None)),
+            "Llama-3.2-3B-Instruct" => Ok(Models::Llama323BInstruct(None)),
             "Llama-3.2-3B-Instruct-Q6_K"
             | "Llama-3.2-3B-Instruct_Q6_K"
             | "Llama-3.2-3B-Instruct.Q6_K" => {
-                Ok(SupportedModels::Llama323BInstruct(Some("Q6_K".to_string())))
+                Ok(Models::Llama323BInstruct(Some("Q6_K".to_string())))
             }
             "Llama-3.2-3B-Instruct-q4f16_1" | "Llama-3.2-3B-Instruct.q4f16_1" => Ok(
-                SupportedModels::Llama323BInstruct(Some("q4f16_1".to_string())),
+                Models::Llama323BInstruct(Some("q4f16_1".to_string())),
             ),
 
             // Mistral 7B
-            "Mistral-7B-Instruct-v0.3" => Ok(SupportedModels::Mistral7BInstructV03(None)),
+            "Mistral-7B-Instruct-v0.3" => Ok(Models::Mistral7BInstructV03(None)),
             "Mistral-7B-Instruct-v0.3-q4f16_1" | "Mistral-7B-Instruct-v0.3.q4f16_1" => Ok(
-                SupportedModels::Mistral7BInstructV03(Some("q4f16_1".to_string())),
+                Models::Mistral7BInstructV03(Some("q4f16_1".to_string())),
             ),
 
             // Mixtral 8x7B
-            "Mixtral-8x7B-Instruct-v0.1" => Ok(SupportedModels::Mixtral8x7BInstructV01(None)),
+            "Mixtral-8x7B-Instruct-v0.1" => Ok(Models::Mixtral8x7BInstructV01(None)),
             "Mixtral-8x7B-Instruct-v0.1-q4f16_1" | "Mixtral-8x7B-Instruct-v0.1.q4f16_1" => Ok(
-                SupportedModels::Mixtral8x7BInstructV01(Some("q4f16_1".to_string())),
+                Models::Mixtral8x7BInstructV01(Some("q4f16_1".to_string())),
             ),
 
             // Gemma models
-            "gemma-2-2b-it" => Ok(SupportedModels::Gemma22BInstruct(None)),
+            "gemma-2-2b-it" => Ok(Models::Gemma22BInstruct(None)),
             "gemma-2-2b-it-q4f16_1" | "gemma-2-2b-it.q4f16_1" => Ok(
-                SupportedModels::Gemma22BInstruct(Some("q4f16_1".to_string())),
+                Models::Gemma22BInstruct(Some("q4f16_1".to_string())),
             ),
 
-            "gemma-2-27b-it" => Ok(SupportedModels::Gemma27BInstruct(None)),
+            "gemma-2-27b-it" => Ok(Models::Gemma27BInstruct(None)),
             "gemma-2-27b-it-q4f16_1" | "gemma-2-27b-it.q4f16_1" => Ok(
-                SupportedModels::Gemma27BInstruct(Some("q4f16_1".to_string())),
+                Models::Gemma27BInstruct(Some("q4f16_1".to_string())),
             ),
 
-            "gemma-2-9b-it" => Ok(SupportedModels::Gemma29BInstruct(None)),
+            "gemma-2-9b-it" => Ok(Models::Gemma29BInstruct(None)),
             "gemma-2-9b-it-q4f16_1" | "gemma-2-9b-it.q4f16_1" => Ok(
-                SupportedModels::Gemma29BInstruct(Some("q4f16_1".to_string())),
+                Models::Gemma29BInstruct(Some("q4f16_1".to_string())),
             ),
-
-            _ => Ok(SupportedModels::Custom(s.to_string())),
+            _ => Ok(Models::Custom(s.to_string())),
         }
     }
 }
 
-impl std::fmt::Display for SupportedModels {
+impl std::fmt::Display for Models {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            SupportedModels::Llama321BInstruct(_) => write!(f, "Llama-3.2-1B-Instruct"),
-            SupportedModels::Llama323BInstruct(_) => write!(f, "Llama-3.2-3B-Instruct"),
-            SupportedModels::Mistral7BInstructV03(_) => write!(f, "Mistral-7B-Instruct-v0.3"),
-            SupportedModels::Mixtral8x7BInstructV01(_) => write!(f, "Mixtral-8x7B-Instruct-v0.1"),
-            SupportedModels::Gemma22BInstruct(_) => write!(f, "gemma-2-2b-it"),
-            SupportedModels::Gemma27BInstruct(_) => write!(f, "gemma-2-27b-it"),
-            SupportedModels::Gemma29BInstruct(_) => write!(f, "gemma-2-9b-it"),
-            SupportedModels::Custom(s) => write!(f, "{}", s),
+            Models::Llama321BInstruct(_) => write!(f, "Llama-3.2-1B-Instruct"),
+            Models::Llama323BInstruct(_) => write!(f, "Llama-3.2-3B-Instruct"),
+            Models::Mistral7BInstructV03(_) => write!(f, "Mistral-7B-Instruct-v0.3"),
+            Models::Mixtral8x7BInstructV01(_) => write!(f, "Mixtral-8x7B-Instruct-v0.1"),
+            Models::Gemma22BInstruct(_) => write!(f, "gemma-2-2b-it"),
+            Models::Gemma27BInstruct(_) => write!(f, "gemma-2-27b-it"),
+            Models::Gemma29BInstruct(_) => write!(f, "gemma-2-9b-it"),
+            Models::Custom(s) => write!(f, "{}", s),
         }
     }
 }
@@ -213,7 +212,7 @@ impl TryFrom<Vec<u8>> for LlmOptions {
 }
 
 impl BlocklessLlm {
-    pub fn new(model: SupportedModels) -> Result<Self, LlmErrorKind> {
+    pub fn new(model: Models) -> Result<Self, LlmErrorKind> {
         let model_name = model.to_string();
         let mut llm: BlocklessLlm = Default::default();
         llm.set_model(&model_name)?;

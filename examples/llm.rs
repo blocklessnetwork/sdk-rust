@@ -8,10 +8,10 @@ use blockless_sdk::*;
 /// demonstrating how the same instance maintains state between requests.
 fn main() {
     // large model
-    let mut llm = BlocklessLlm::new(SupportedModels::Mistral7BInstructV03(None)).unwrap();
+    let mut llm = BlocklessLlm::new(Models::Mistral7BInstructV03(None)).unwrap();
 
     // small model
-    let mut llm_small = BlocklessLlm::new(SupportedModels::Llama321BInstruct(None)).unwrap();
+    let mut llm_small = BlocklessLlm::new(Models::Llama321BInstruct(None)).unwrap();
 
     let prompt = r#"
     You are a helpful assistant.

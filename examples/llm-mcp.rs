@@ -5,8 +5,7 @@ use blockless_sdk::*;
 
 fn main() {
     // large model
-    let mut llm = BlocklessLlm::new(SupportedModels::Custom(
-        "Llama-3.1-8B-Instruct-q4f16_1-MLC".to_string(),
+    let mut llm = BlocklessLlm::new(Models::Custom(
     ))
     .unwrap();
 
