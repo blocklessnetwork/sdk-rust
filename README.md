@@ -86,4 +86,4 @@ cargo build --release --target wasm32-wasip1 --example llm-mcp
 | [coingecko_oracle](./examples/coingecko_oracle.rs) | Coingecko Oracle to query price of bitcoin from coingecko | ✅ | ✅ |
 | [httpbin](./examples/httpbin.rs) | HTTP to query anything from httpbin | ✅ | ✅ |
 | [llm](./examples/llm.rs) | LLM to chat with `Llama-3.1-8B-Instruct-q4f32_1-MLC` and `SmolLM2-1.7B-Instruct-q4f16_1-MLC` models | ✅ | ✅ |
-| [llm-mcp](./examples/llm-mcp.rs) | LLM with MCP (Model Control Protocol) demonstrating tool integration using SSE endpoints | ✅ | ❌ |
+| [llm-mcp](./examples/llm-mcp.rs) | LLM with MCP (Model Control Protocol) demonstrating tool integration using SSE endpoints | ✅ | ✅ |
