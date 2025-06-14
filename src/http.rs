@@ -2,6 +2,7 @@ use crate::error::HttpErrorKind;
 use json::JsonValue;
 use std::{cmp::Ordering, collections::BTreeMap};
 
+#[cfg(not(feature = "mock-ffi"))]
 #[link(wasm_import_module = "blockless_http")]
 extern "C" {
     #[link_name = "http_req"]
@@ -30,6 +31,44 @@ extern "C" {
     #[link_name = "http_close"]
     pub(crate) fn http_close(handle: u32) -> u32;
 }
+
+#[cfg(feature = "mock-ffi")]
+#[allow(unused_variables)]
+mod mock_ffi {
+
+    pub unsafe fn http_open(
+        _url: *const u8,
+        _url_len: u32,
+        _opts: *const u8,
+        _opts_len: u32,
+        fd: *mut u32,
+        status: *mut u32,
+    ) -> u32 {
+        unimplemented!()
+    }
+
+    pub unsafe fn http_read_header(
+        _handle: u32,
+        _header: *const u8,
+        _header_len: u32,
+        buf: *mut u8,
+        buf_len: u32,
+        num: *mut u32,
+    ) -> u32 {
+        unimplemented!()
+    }
+
+    pub unsafe fn http_read_body(_handle: u32, buf: *mut u8, buf_len: u32, num: *mut u32) -> u32 {
+        unimplemented!()
+    }
+
+    pub unsafe fn http_close(_handle: u32) -> u32 {
+        unimplemented!()
+    }
+}
+
+#[cfg(feature = "mock-ffi")]
+use mock_ffi::*;
 
 type Handle = u32;
 type ExitCode = u32;
