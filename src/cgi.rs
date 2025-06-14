@@ -31,20 +31,39 @@ extern "C" {
 #[cfg(feature = "mock-ffi")]
 #[allow(unused_variables)]
 mod mock_ffi {
-    pub unsafe extern "C" fn cgi_open(_opts: *const u8, _opts_len: u32, cgi_handle: *mut u32) -> u32 {
+    pub unsafe extern "C" fn cgi_open(
+        _opts: *const u8,
+        _opts_len: u32,
+        cgi_handle: *mut u32,
+    ) -> u32 {
         unimplemented!()
     }
 
-    pub unsafe extern "C" fn cgi_stdout_read(_handle: u32, buf: *mut u8, buf_len: u32, num: *mut u32) -> u32 {
+    pub unsafe extern "C" fn cgi_stdout_read(
+        _handle: u32,
+        buf: *mut u8,
+        buf_len: u32,
+        num: *mut u32,
+    ) -> u32 {
         unimplemented!()
     }
 
-    pub unsafe extern "C" fn cgi_stderr_read(_handle: u32, buf: *mut u8, buf_len: u32, num: *mut u32) -> u32 {
+    pub unsafe extern "C" fn cgi_stderr_read(
+        _handle: u32,
+        buf: *mut u8,
+        buf_len: u32,
+        num: *mut u32,
+    ) -> u32 {
         unimplemented!()
     }
 
     #[allow(dead_code)]
-    pub unsafe extern "C" fn cgi_stdin_write(_handle: u32, _buf: *const u8, buf_len: u32, num: *mut u32) -> u32 {
+    pub unsafe extern "C" fn cgi_stdin_write(
+        _handle: u32,
+        _buf: *const u8,
+        buf_len: u32,
+        num: *mut u32,
+    ) -> u32 {
         unimplemented!()
     }
 
