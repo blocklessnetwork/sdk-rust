@@ -2,6 +2,7 @@ use crate::CGIErrorKind;
 use json::{object::Object, JsonValue};
 use std::fmt::{Debug, Display};
 
+#[cfg(not(feature = "mock-ffi"))]
 #[link(wasm_import_module = "blockless_cgi")]
 extern "C" {
     #[link_name = "cgi_open"]
@@ -26,6 +27,42 @@ extern "C" {
     #[link_name = "cgi_list_read"]
     pub(crate) fn cgi_list_read(handle: u32, buf: *mut u8, buf_len: u32, num: *mut u32) -> u32;
 }
+
+#[cfg(feature = "mock-ffi")]
+#[allow(unused_variables)]
+mod mock_ffi {
+    pub unsafe extern "C" fn cgi_open(_opts: *const u8, _opts_len: u32, cgi_handle: *mut u32) -> u32 {
+        unimplemented!()
+    }
+
+    pub unsafe extern "C" fn cgi_stdout_read(_handle: u32, buf: *mut u8, buf_len: u32, num: *mut u32) -> u32 {
+        unimplemented!()
+    }
+
+    pub unsafe extern "C" fn cgi_stderr_read(_handle: u32, buf: *mut u8, buf_len: u32, num: *mut u32) -> u32 {
+        unimplemented!()
+    }
+
+    #[allow(dead_code)]
+    pub unsafe extern "C" fn cgi_stdin_write(_handle: u32, _buf: *const u8, buf_len: u32, num: *mut u32) -> u32 {
+        unimplemented!()
+    }
+
+    pub unsafe fn cgi_close(_handle: u32) -> u32 {
+        unimplemented!()
+    }
+
+    pub unsafe fn cgi_list_exec(cgi_handle: *mut u32) -> u32 {
+        unimplemented!()
+    }
+
+    pub unsafe fn cgi_list_read(_handle: u32, buf: *mut u8, buf_len: u32, num: *mut u32) -> u32 {
+        unimplemented!()
+    }
+}
+
+#[cfg(feature = "mock-ffi")]
+use mock_ffi::*;
 
 #[derive(Debug)]
 pub struct CGIExtensions {
