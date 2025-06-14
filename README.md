@@ -87,3 +87,23 @@ cargo build --release --target wasm32-wasip1 --example llm-mcp
 | [httpbin](./examples/httpbin.rs) | HTTP to query anything from httpbin | ✅ | ✅ |
 | [llm](./examples/llm.rs) | LLM to chat with `Llama-3.1-8B-Instruct-q4f32_1-MLC` and `SmolLM2-1.7B-Instruct-q4f16_1-MLC` models | ✅ | ✅ |
 | [llm-mcp](./examples/llm-mcp.rs) | LLM with MCP (Model Control Protocol) demonstrating tool integration using SSE endpoints | ✅ | ✅ |
+
+
+## Testing
+
+The SDK uses FFI (Foreign Function Interface) calls that are only available in the Blockless WASM runtime environment.
+To run tests without host runtime, use the `mock-ffi` feature which provides mock implementations:
+
+```bash
+cargo test --all --features mock-ffi
+```
+
+This feature enables mock implementations of all FFI functions, allowing you to:
+- Test SDK struct creation and configuration
+- Test error handling logic
+- Verify API contracts without needing the runtime
+- Run unit tests in CI/CD pipelines
+
+Note:
+- The mocks return predictable test data and don't perform actual network requests or system calls.
+- Only one implementation of the FFI functions is allowed to be mocked.

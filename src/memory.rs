@@ -1,3 +1,4 @@
+#[cfg(not(feature = "mock-ffi"))]
 #[link(wasm_import_module = "blockless_memory")]
 extern "C" {
     #[link_name = "memory_read"]
@@ -5,6 +6,21 @@ extern "C" {
     #[link_name = "env_var_read"]
     pub(crate) fn env_var_read(buf: *mut u8, len: u32, num: *mut u32) -> u32;
 }
+
+#[cfg(feature = "mock-ffi")]
+#[allow(unused_variables)]
+mod mock_ffi {
+    pub unsafe fn memory_read(buf: *mut u8, len: u32, num: *mut u32) -> u32 {
+        unimplemented!()
+    }
+
+    pub unsafe fn env_var_read(buf: *mut u8, len: u32, num: *mut u32) -> u32 {
+        unimplemented!()
+    }
+}
+
+#[cfg(feature = "mock-ffi")]
+use mock_ffi::*;
 
 pub fn read_stdin(buf: &mut [u8]) -> std::io::Result<u32> {
     let mut len = 0;

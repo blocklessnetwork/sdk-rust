@@ -1,5 +1,6 @@
 use crate::SocketErrorKind;
 
+#[cfg(not(feature = "mock-ffi"))]
 #[link(wasm_import_module = "blockless_socket")]
 extern "C" {
     #[link_name = "create_tcp_bind_socket"]
@@ -9,6 +10,20 @@ extern "C" {
         fd: *mut u32,
     ) -> u32;
 }
+
+#[cfg(feature = "mock-ffi")]
+mod mock_ffi {
+    pub unsafe fn create_tcp_bind_socket_native(
+        _addr: *const u8,
+        _addr_len: u32,
+        _fd: *mut u32,
+    ) -> u32 {
+        unimplemented!()
+    }
+}
+
+#[cfg(feature = "mock-ffi")]
+use mock_ffi::*;
 
 pub fn create_tcp_bind_socket(addr: &str) -> Result<u32, SocketErrorKind> {
     unsafe {
