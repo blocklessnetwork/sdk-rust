@@ -4,6 +4,7 @@ use std::{str::FromStr, string::ToString};
 type Handle = u32;
 type ExitCode = u8;
 
+#[cfg(not(feature = "mock-ffi"))]
 #[link(wasm_import_module = "blockless_llm")]
 extern "C" {
     fn llm_set_model_request(h: *mut Handle, model_ptr: *const u8, model_len: u8) -> ExitCode;
@@ -33,6 +34,70 @@ extern "C" {
     ) -> ExitCode;
     fn llm_close(h: Handle) -> ExitCode;
 }
+
+#[cfg(feature = "mock-ffi")]
+#[allow(unused_variables)]
+mod mock_ffi {
+    use super::*;
+
+    pub unsafe fn llm_set_model_request(
+        h: *mut Handle,
+        _model_ptr: *const u8,
+        _model_len: u8,
+    ) -> ExitCode {
+        unimplemented!()
+    }
+
+    pub unsafe fn llm_get_model_response(
+        _h: Handle,
+        buf: *mut u8,
+        buf_len: u8,
+        bytes_written: *mut u8,
+    ) -> ExitCode {
+        unimplemented!()
+    }
+
+    pub unsafe fn llm_set_model_options_request(
+        _h: Handle,
+        _options_ptr: *const u8,
+        _options_len: u16,
+    ) -> ExitCode {
+        unimplemented!()
+    }
+
+    pub unsafe fn llm_get_model_options(
+        _h: Handle,
+        buf: *mut u8,
+        buf_len: u16,
+        bytes_written: *mut u16,
+    ) -> ExitCode {
+        unimplemented!()
+    }
+
+    pub unsafe fn llm_prompt_request(
+        _h: Handle,
+        _prompt_ptr: *const u8,
+        _prompt_len: u16,
+    ) -> ExitCode {
+        unimplemented!()
+    }
+
+    pub unsafe fn llm_read_prompt_response(
+        _h: Handle,
+        buf: *mut u8,
+        buf_len: u16,
+        bytes_written: *mut u16,
+    ) -> ExitCode {
+        unimplemented!()
+    }
+
+    pub unsafe fn llm_close(_h: Handle) -> ExitCode {
+        unimplemented!()
+    }
+}
+
+#[cfg(feature = "mock-ffi")]
+use mock_ffi::*;
 
 #[derive(Debug, Clone)]
 pub enum Models {
