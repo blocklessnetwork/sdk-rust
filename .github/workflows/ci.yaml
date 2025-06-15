@@ -22,3 +22,5 @@ jobs:
         run: cargo clippy --all-features --all-targets -- -D warnings
       - name: Check
         run: cargo check --release --all --all-features
+      - name: Test
+        run: cargo test --all --features mock-ffi
