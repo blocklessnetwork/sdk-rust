@@ -13,21 +13,6 @@
 //! - Timeout: 15s default, 120s max
 //! - Wait time: 3s default, 20s max
 //! - Buffer sizes: 2MB (scrape), 128KB (map), 8MB (crawl)
-//!
-//! ## Example
-//!
-//! ```rust
-//! use blockless_sdk::*;
-//!
-//! // Create with default config
-//! let crawler = BlessCrawl::default();
-//! let result = crawler.scrape("https://example.com", None).unwrap();
-//!
-//! // Or override config per request
-//! let custom_config = ScrapeOptions { timeout: 30000, wait_time: 5000, ..Default::default() };
-//! let result = crawler.scrape("https://example.com", Some(custom_config)).unwrap();
-//! println!("Content: {}", result.data.content);
-//! ```
 
 mod html_to_markdown;
 mod html_transform;
