@@ -174,12 +174,6 @@ pub enum Format {
     Json,
 }
 
-impl std::fmt::Display for Format {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.to_string().to_lowercase())
-    }
-}
-
 impl std::str::FromStr for Format {
     type Err = ();
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -420,7 +414,7 @@ impl BlessCrawl {
     pub const MAX_SCRAPE_BUFFER_SIZE: usize = 2 * 1024 * 1024;
 
     /// Maximum result buffer size in bytes (1MB)
-    pub const MAX_MAP_BUFFER_SIZE: usize = 1 * 1024 * 1024;
+    pub const MAX_MAP_BUFFER_SIZE: usize = 1024 * 1024;
 
     /// Maximum result buffer size in bytes (8MB)
     pub const MAX_CRAWL_BUFFER_SIZE: usize = 8 * 1024 * 1024;

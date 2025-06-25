@@ -24,9 +24,7 @@ pub fn parse_markdown(html: &str) -> String {
 
     // Process the markdown content
     let processed_markdown = process_multiline_links(&markdown);
-    let final_markdown = remove_skip_to_content_links(&processed_markdown);
-
-    final_markdown
+    remove_skip_to_content_links(&processed_markdown)
 }
 
 /// Processes multi-line links by escaping newlines inside link content
