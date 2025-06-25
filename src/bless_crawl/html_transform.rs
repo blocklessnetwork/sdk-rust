@@ -101,14 +101,17 @@ impl std::error::Error for HtmlTransformError {}
 /// Transforms HTML by removing unwanted elements, filtering tags, and processing URLs
 pub fn transform_html(opts: TransformHtmlOptions) -> Result<String, HtmlTransformError> {
     let mut document = parse_html().one(opts.html);
-    
+
     // If include_tags is specified, only include those tags
     if !opts.include_tags.is_empty() {
         let new_document = parse_html().one("<div></div>");
-        let root = new_document.select_first("div").map_err(|_| HtmlTransformError::SelectError)?;
+        let root = new_document
+            .select_first("div")
+            .map_err(|_| HtmlTransformError::SelectError)?;
 
         for tag_selector in opts.include_tags.iter() {
-            let matching_nodes: Vec<_> = document.select(tag_selector)
+            let matching_nodes: Vec<_> = document
+                .select(tag_selector)
                 .map_err(|_| HtmlTransformError::SelectError)?
                 .collect();
             for tag in matching_nodes {
@@ -137,17 +140,20 @@ pub fn transform_html(opts: TransformHtmlOptions) -> Result<String, HtmlTransfor
     // Remove non-main content if requested
     if opts.only_main_content {
         for selector in EXCLUDE_NON_MAIN_TAGS.iter() {
-            let elements: Vec<_> = document.select(selector)
+            let elements: Vec<_> = document
+                .select(selector)
                 .map_err(|_| HtmlTransformError::SelectError)?
                 .collect();
             for element in elements {
                 // Check if this element contains any force-include tags
                 let should_keep = FORCE_INCLUDE_MAIN_TAGS.iter().any(|force_selector| {
-                    element.as_node().select(force_selector)
+                    element
+                        .as_node()
+                        .select(force_selector)
                         .map(|mut iter| iter.next().is_some())
                         .unwrap_or(false)
                 });
-                
+
                 if !should_keep {
                     element.as_node().detach();
                 }
@@ -156,35 +162,39 @@ pub fn transform_html(opts: TransformHtmlOptions) -> Result<String, HtmlTransfor
     }
 
     // Process images with srcset attributes
-    let srcset_images: Vec<_> = document.select("img[srcset]")
+    let srcset_images: Vec<_> = document
+        .select("img[srcset]")
         .map_err(|_| HtmlTransformError::SelectError)?
         .collect();
-    
+
     for img in srcset_images {
         let srcset = img.attributes.borrow().get("srcset").map(|s| s.to_string());
         if let Some(srcset) = srcset {
-            let mut sizes: Vec<ImageSource> = srcset.split(',').filter_map(|entry| {
-                let tokens: Vec<&str> = entry.trim().split(' ').collect();
-                if tokens.is_empty() {
-                    return None;
-                }
-                
-                let size_token = if tokens.len() > 1 && !tokens[1].is_empty() {
-                    tokens[1]
-                } else {
-                    "1x"
-                };
-                
-                if let Ok(parsed_size) = size_token[..size_token.len()-1].parse() {
-                    Some(ImageSource {
-                        url: tokens[0].to_string(),
-                        size: parsed_size,
-                        is_x: size_token.ends_with('x')
-                    })
-                } else {
-                    None
-                }
-            }).collect();
+            let mut sizes: Vec<ImageSource> = srcset
+                .split(',')
+                .filter_map(|entry| {
+                    let tokens: Vec<&str> = entry.trim().split(' ').collect();
+                    if tokens.is_empty() {
+                        return None;
+                    }
+
+                    let size_token = if tokens.len() > 1 && !tokens[1].is_empty() {
+                        tokens[1]
+                    } else {
+                        "1x"
+                    };
+
+                    if let Ok(parsed_size) = size_token[..size_token.len() - 1].parse() {
+                        Some(ImageSource {
+                            url: tokens[0].to_string(),
+                            size: parsed_size,
+                            is_x: size_token.ends_with('x'),
+                        })
+                    } else {
+                        None
+                    }
+                })
+                .collect();
 
             // Add src attribute as 1x if all sizes are x-based
             if sizes.iter().all(|s| s.is_x) {
@@ -201,36 +211,49 @@ pub fn transform_html(opts: TransformHtmlOptions) -> Result<String, HtmlTransfor
             // Sort by size (largest first) and use the biggest image
             sizes.sort_by(|a, b| b.size.cmp(&a.size));
             if let Some(biggest) = sizes.first() {
-                img.attributes.borrow_mut().insert("src", biggest.url.clone());
+                img.attributes
+                    .borrow_mut()
+                    .insert("src", biggest.url.clone());
             }
         }
     }
 
     // Convert relative URLs to absolute URLs
     let base_url = Url::parse(&opts.url).map_err(|_| HtmlTransformError::UrlParseError)?;
-    
+
     // Process image src attributes
-    let src_images: Vec<_> = document.select("img[src]")
+    let src_images: Vec<_> = document
+        .select("img[src]")
         .map_err(|_| HtmlTransformError::SelectError)?
         .collect();
     for img in src_images {
         let old_src = img.attributes.borrow().get("src").map(|s| s.to_string());
         if let Some(old_src) = old_src {
             if let Ok(new_url) = base_url.join(&old_src) {
-                img.attributes.borrow_mut().insert("src", new_url.to_string());
+                img.attributes
+                    .borrow_mut()
+                    .insert("src", new_url.to_string());
             }
         }
     }
 
     // Process anchor href attributes
-    let href_anchors: Vec<_> = document.select("a[href]")
+    let href_anchors: Vec<_> = document
+        .select("a[href]")
         .map_err(|_| HtmlTransformError::SelectError)?
         .collect();
     for anchor in href_anchors {
-        let old_href = anchor.attributes.borrow().get("href").map(|s| s.to_string());
+        let old_href = anchor
+            .attributes
+            .borrow()
+            .get("href")
+            .map(|s| s.to_string());
         if let Some(old_href) = old_href {
             if let Ok(new_url) = base_url.join(&old_href) {
-                anchor.attributes.borrow_mut().insert("href", new_url.to_string());
+                anchor
+                    .attributes
+                    .borrow_mut()
+                    .insert("href", new_url.to_string());
             }
         }
     }
@@ -268,7 +291,8 @@ mod tests {
         };
 
         let result = transform_html(opts).unwrap();
-        let expected = "<html><body><div><div class=\"content\">Keep this</div></div></body></html>";
+        let expected =
+            "<html><body><div><div class=\"content\">Keep this</div></div></body></html>";
         assert_eq!(result, expected);
     }
 
@@ -290,7 +314,8 @@ mod tests {
     #[test]
     fn test_transform_html_relative_urls() {
         let opts = TransformHtmlOptions {
-            html: r#"<html><body><img src="/image.jpg"><a href="/page">Link</a></body></html>"#.to_string(),
+            html: r#"<html><body><img src="/image.jpg"><a href="/page">Link</a></body></html>"#
+                .to_string(),
             url: "https://example.com/subdir/".to_string(),
             include_tags: vec![],
             exclude_tags: vec![],
@@ -346,4 +371,4 @@ mod tests {
         let expected = r#"<html><body><div class="widget"><div id="main"><p>Important content</p></div></div></body></html>"#;
         assert_eq!(result, expected);
     }
-} 
+}

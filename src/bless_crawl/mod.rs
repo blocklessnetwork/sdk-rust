@@ -22,7 +22,7 @@
 //! // Create with default config
 //! let crawler = BlessCrawl::default();
 //! let result = crawler.scrape("https://example.com", None).unwrap();
-//! 
+//!
 //! // Or override config per request
 //! let custom_config = ScrapeOptions { timeout: 30000, wait_time: 5000, ..Default::default() };
 //! let result = crawler.scrape("https://example.com", Some(custom_config)).unwrap();
@@ -33,7 +33,7 @@ mod html_to_markdown;
 mod html_transform;
 
 use html_to_markdown::parse_markdown;
-pub use html_transform::{transform_html, TransformHtmlOptions, HtmlTransformError};
+pub use html_transform::{transform_html, HtmlTransformError, TransformHtmlOptions};
 use std::collections::HashMap;
 
 type Handle = u32;
@@ -318,7 +318,10 @@ impl ScrapeOptions {
     }
 
     pub fn with_viewport(mut self, width: u32, height: u32) -> Self {
-        self.viewport = Some(Viewport { width: Some(width), height: Some(height) });
+        self.viewport = Some(Viewport {
+            width: Some(width),
+            height: Some(height),
+        });
         self
     }
 
@@ -449,7 +452,11 @@ impl BlessCrawl {
     }
 
     /// Scrapes webpage content and returns it as markdown with metadata.
-    pub fn scrape(&self, url: &str, options: Option<ScrapeOptions>) -> Result<Response<ScrapeData>, WebScrapeErrorKind> {
+    pub fn scrape(
+        &self,
+        url: &str,
+        options: Option<ScrapeOptions>,
+    ) -> Result<Response<ScrapeData>, WebScrapeErrorKind> {
         // Use provided options or fall back to instance config
         let config = if let Some(opts) = options {
             self.validate_config(&opts)?;
@@ -491,13 +498,11 @@ impl BlessCrawl {
             unsafe { std::slice::from_raw_parts(result_buf.as_ptr(), bytes_written) };
 
         // deserialize the result to host ScrapeResponse
-        let mut scrape_response = serde_json::from_slice::<Response<ScrapeData>>(
-            result_bytes,
-        )
-        .map_err(|e| {
-            eprintln!("error: {:?}", e);
-            WebScrapeErrorKind::ParseError
-        })?;
+        let mut scrape_response = serde_json::from_slice::<Response<ScrapeData>>(result_bytes)
+            .map_err(|e| {
+                eprintln!("error: {:?}", e);
+                WebScrapeErrorKind::ParseError
+            })?;
 
         if let Some(error) = scrape_response.error {
             return Err(WebScrapeErrorKind::RuntimeError(error));
@@ -510,7 +515,8 @@ impl BlessCrawl {
             include_tags: config.include_tags.unwrap_or_default(),
             exclude_tags: config.exclude_tags.unwrap_or_default(),
             only_main_content: config.only_main_content,
-        }).map_err(|e| {
+        })
+        .map_err(|e| {
             eprintln!("error: {:?}", e);
             WebScrapeErrorKind::TransformError
         })?;
@@ -573,10 +579,11 @@ impl BlessCrawl {
             unsafe { std::slice::from_raw_parts(result_buf.as_ptr(), bytes_written) };
 
         // deserialize the result to MapResponse
-        let map_response = serde_json::from_slice::<Response<MapData>>(result_bytes).map_err(|e| {
-            eprintln!("error: {:?}", e);
-            WebScrapeErrorKind::ParseError
-        })?;
+        let map_response =
+            serde_json::from_slice::<Response<MapData>>(result_bytes).map_err(|e| {
+                eprintln!("error: {:?}", e);
+                WebScrapeErrorKind::ParseError
+            })?;
 
         if let Some(error) = map_response.error {
             return Err(WebScrapeErrorKind::RuntimeError(error));
@@ -630,11 +637,13 @@ impl BlessCrawl {
             unsafe { std::slice::from_raw_parts(result_buf.as_ptr(), bytes_written) };
 
         // deserialize the result to CrawlResponse
-        let mut host_crawl_response =
-            serde_json::from_slice::<Response<CrawlData<ScrapeData>>>(result_bytes).map_err(|e| {
-                eprintln!("error: {:?}", e);
-                WebScrapeErrorKind::ParseError
-            })?;
+        let mut host_crawl_response = serde_json::from_slice::<Response<CrawlData<ScrapeData>>>(
+            result_bytes,
+        )
+        .map_err(|e| {
+            eprintln!("error: {:?}", e);
+            WebScrapeErrorKind::ParseError
+        })?;
 
         if let Some(error) = host_crawl_response.error {
             return Err(WebScrapeErrorKind::RuntimeError(error));
@@ -648,7 +657,8 @@ impl BlessCrawl {
                 include_tags: self.config.include_tags.clone().unwrap_or_default(),
                 exclude_tags: self.config.exclude_tags.clone().unwrap_or_default(),
                 only_main_content: self.config.only_main_content,
-            }).map_err(|e| {
+            })
+            .map_err(|e| {
                 eprintln!("error: {:?}", e);
                 WebScrapeErrorKind::TransformError
             })?;

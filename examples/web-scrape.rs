@@ -23,10 +23,15 @@ fn example_scraping() {
     println!("scraping: {}...", url);
 
     // First scrape with default config
-    let response = BlessCrawl::default().scrape(url, None).expect("Failed to scrape");
+    let response = BlessCrawl::default()
+        .scrape(url, None)
+        .expect("Failed to scrape");
     println!("response with default config: {:?}", response);
     println!();
-    println!("---------- markdown ----------\n{}\n------------------------------", response.data.content);
+    println!(
+        "---------- markdown ----------\n{}\n------------------------------",
+        response.data.content
+    );
 }
 
 fn example_mapping() {
@@ -40,12 +45,20 @@ fn example_mapping() {
         .with_base_url(url.to_string())
         .with_filter_extensions(vec![".html".to_string(), ".htm".to_string()]);
 
-    let response = BlessCrawl::default().map(url, Some(options)).expect("Failed to map");
+    let response = BlessCrawl::default()
+        .map(url, Some(options))
+        .expect("Failed to map");
     println!("response: {:?}", response);
     println!();
-    println!("------------ links ------------\n{:?}\n------------------------------", response.data.links);
+    println!(
+        "------------ links ------------\n{:?}\n------------------------------",
+        response.data.links
+    );
     println!();
-    println!("------------ total links ------------\n{}\n------------------------------", response.data.total_links);
+    println!(
+        "------------ total links ------------\n{}\n------------------------------",
+        response.data.total_links
+    );
 }
 
 fn example_crawling() {
@@ -63,10 +76,18 @@ fn example_crawling() {
         .with_delay_between_requests(1000)
         .with_parallel_requests(3);
 
-    let response = BlessCrawl::default().crawl(url, Some(options)).expect("Failed to crawl");
+    let response = BlessCrawl::default()
+        .crawl(url, Some(options))
+        .expect("Failed to crawl");
     println!("response: {:?}", response);
     println!();
-    println!("------------ pages ------------\n{:?}\n------------------------------", response.data.pages);
+    println!(
+        "------------ pages ------------\n{:?}\n------------------------------",
+        response.data.pages
+    );
     println!();
-    println!("------------ total pages ------------\n{}\n------------------------------", response.data.total_pages);
+    println!(
+        "------------ total pages ------------\n{}\n------------------------------",
+        response.data.total_pages
+    );
 }
