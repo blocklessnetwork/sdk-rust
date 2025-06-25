@@ -101,7 +101,7 @@ mod mock_ffi {
         result_len: usize,
         bytes_written: *mut usize,
     ) -> ExitCode {
-        unimplemented!()
+        1
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -115,7 +115,7 @@ mod mock_ffi {
         result_len: usize,
         bytes_written: *mut usize,
     ) -> ExitCode {
-        unimplemented!()
+        1
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -129,11 +129,11 @@ mod mock_ffi {
         result_len: usize,
         bytes_written: *mut usize,
     ) -> ExitCode {
-        unimplemented!()
+        1
     }
 
     pub unsafe fn close(_h: Handle) -> ExitCode {
-        unimplemented!()
+        1
     }
 }
 
