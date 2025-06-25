@@ -43,6 +43,7 @@ type ExitCode = u8;
 #[link(wasm_import_module = "bless_crawl")]
 extern "C" {
     /// Scrape webpage content and return as markdown
+    #[allow(clippy::too_many_arguments)]
     fn scrape(
         h: *mut Handle,
         url_ptr: *const u8,
@@ -55,6 +56,7 @@ extern "C" {
     ) -> ExitCode;
 
     /// Extract and return all discoverable links from webpage
+    #[allow(clippy::too_many_arguments)]
     fn map(
         h: *mut Handle,
         url_ptr: *const u8,
@@ -67,6 +69,7 @@ extern "C" {
     ) -> ExitCode;
 
     /// Recursively crawl website starting from given URL
+    #[allow(clippy::too_many_arguments)]
     fn crawl(
         h: *mut Handle,
         url_ptr: *const u8,
@@ -87,6 +90,7 @@ extern "C" {
 mod mock_ffi {
     use super::{ExitCode, Handle};
 
+    #[allow(clippy::too_many_arguments)]
     pub unsafe fn scrape(
         h: *mut Handle,
         _url_ptr: *const u8,
@@ -100,6 +104,7 @@ mod mock_ffi {
         unimplemented!()
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub unsafe fn map(
         h: *mut Handle,
         _url_ptr: *const u8,
@@ -113,6 +118,7 @@ mod mock_ffi {
         unimplemented!()
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub unsafe fn crawl(
         h: *mut Handle,
         _url_ptr: *const u8,
