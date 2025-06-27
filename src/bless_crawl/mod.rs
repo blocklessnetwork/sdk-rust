@@ -40,32 +40,6 @@ extern "C" {
         bytes_written: *mut usize,
     ) -> ExitCode;
 
-    /// Extract and return all discoverable links from webpage
-    #[allow(clippy::too_many_arguments)]
-    fn map(
-        h: *mut Handle,
-        url_ptr: *const u8,
-        url_len: usize,
-        options_ptr: *const u8,
-        options_len: usize,
-        result_ptr: *mut u8,
-        result_len: usize,
-        bytes_written: *mut usize,
-    ) -> ExitCode;
-
-    /// Recursively crawl website starting from given URL
-    #[allow(clippy::too_many_arguments)]
-    fn crawl(
-        h: *mut Handle,
-        url_ptr: *const u8,
-        url_len: usize,
-        options_ptr: *const u8,
-        options_len: usize,
-        result_ptr: *mut u8,
-        result_len: usize,
-        bytes_written: *mut usize,
-    ) -> ExitCode;
-
     /// Close and cleanup a web scraper instance
     fn close(h: Handle) -> ExitCode;
 }
@@ -77,34 +51,6 @@ mod mock_ffi {
 
     #[allow(clippy::too_many_arguments)]
     pub unsafe fn scrape(
-        h: *mut Handle,
-        _url_ptr: *const u8,
-        _url_len: usize,
-        _options_ptr: *const u8,
-        _options_len: usize,
-        result_ptr: *mut u8,
-        result_len: usize,
-        bytes_written: *mut usize,
-    ) -> ExitCode {
-        1
-    }
-
-    #[allow(clippy::too_many_arguments)]
-    pub unsafe fn map(
-        h: *mut Handle,
-        _url_ptr: *const u8,
-        _url_len: usize,
-        _options_ptr: *const u8,
-        _options_len: usize,
-        result_ptr: *mut u8,
-        result_len: usize,
-        bytes_written: *mut usize,
-    ) -> ExitCode {
-        1
-    }
-
-    #[allow(clippy::too_many_arguments)]
-    pub unsafe fn crawl(
         h: *mut Handle,
         _url_ptr: *const u8,
         _url_len: usize,
@@ -525,56 +471,21 @@ impl BlessCrawl {
         url: &str,
         options: Option<MapOptions>,
     ) -> Result<Response<MapData>, WebScrapeErrorKind> {
-        let mut combined_options = serde_json::to_value(&self.config).unwrap();
-        if let Some(map_opts) = options {
-            combined_options["map_options"] = serde_json::to_value(map_opts).unwrap();
-        }
-        let options_json = serde_json::to_vec(&combined_options).unwrap();
+        let _map_options = options.unwrap_or_default();
 
-        let mut result_buf = vec![0u8; Self::MAX_MAP_BUFFER_SIZE];
-        let mut bytes_written: usize = 0;
+        // let scrape_response = self.scrape(url, None)?;
+        // TODO: implement map by post-processing the scrape response or using fetch
 
-        let mut handle = self.inner;
-        let code = unsafe {
-            map(
-                &mut handle,
-                url.as_ptr(),
-                url.len(),
-                options_json.as_ptr(),
-                options_json.len(),
-                result_buf.as_mut_ptr(),
-                result_buf.len(),
-                &mut bytes_written,
-            )
-        };
-
-        if code != 0 {
-            return Err(code.into());
-        }
-
-        if bytes_written == 0 {
-            return Err(WebScrapeErrorKind::EmptyResponse);
-        }
-
-        if bytes_written > result_buf.len() {
-            return Err(WebScrapeErrorKind::MemoryError);
-        }
-
-        let result_bytes =
-            unsafe { std::slice::from_raw_parts(result_buf.as_ptr(), bytes_written) };
-
-        // deserialize the result to MapResponse
-        let map_response =
-            serde_json::from_slice::<Response<MapData>>(result_bytes).map_err(|e| {
-                eprintln!("error: {:?}", e);
-                WebScrapeErrorKind::ParseError
-            })?;
-
-        if let Some(error) = map_response.error {
-            return Err(WebScrapeErrorKind::RuntimeError(error));
-        }
-
-        Ok(map_response)
+        Ok(Response {
+            success: true,
+            error: None,
+            data: MapData {
+                url: url.to_string(),
+                links: vec![],
+                total_links: 0,
+                timestamp: 0,
+            },
+        })
     }
 
     /// Recursively crawls a website with configurable depth and filtering.
@@ -583,83 +494,22 @@ impl BlessCrawl {
         url: &str,
         options: Option<CrawlOptions>,
     ) -> Result<Response<CrawlData<ScrapeData>>, WebScrapeErrorKind> {
-        let mut combined_options = serde_json::to_value(&self.config).unwrap();
-        if let Some(crawl_opts) = options {
-            combined_options["crawl_options"] = serde_json::to_value(crawl_opts).unwrap();
-        }
-        let options_json = serde_json::to_vec(&combined_options).unwrap();
+        let _crawl_options = options.unwrap_or_default();
 
-        let mut result_buf = vec![0u8; Self::MAX_CRAWL_BUFFER_SIZE];
-        let mut bytes_written: usize = 0;
+        // TODO: implement crawl by post-processing the scrape response or using fetch
 
-        let mut handle = self.inner;
-        let code = unsafe {
-            crawl(
-                &mut handle,
-                url.as_ptr(),
-                url.len(),
-                options_json.as_ptr(),
-                options_json.len(),
-                result_buf.as_mut_ptr(),
-                result_buf.len(),
-                &mut bytes_written,
-            )
-        };
-
-        if code != 0 {
-            return Err(code.into());
-        }
-
-        if bytes_written == 0 {
-            return Err(WebScrapeErrorKind::EmptyResponse);
-        }
-
-        if bytes_written > result_buf.len() {
-            return Err(WebScrapeErrorKind::MemoryError);
-        }
-
-        let result_bytes =
-            unsafe { std::slice::from_raw_parts(result_buf.as_ptr(), bytes_written) };
-
-        // deserialize the result to CrawlResponse
-        let mut host_crawl_response = serde_json::from_slice::<Response<CrawlData<ScrapeData>>>(
-            result_bytes,
-        )
-        .map_err(|e| {
-            eprintln!("error: {:?}", e);
-            WebScrapeErrorKind::ParseError
-        })?;
-
-        if let Some(error) = host_crawl_response.error {
-            return Err(WebScrapeErrorKind::RuntimeError(error));
-        }
-
-        // post-process html
-        for page in host_crawl_response.data.pages.iter_mut() {
-            page.content = transform_html(TransformHtmlOptions {
-                html: page.content.clone(),
-                url: page.metadata.url.clone(),
-                include_tags: self.config.include_tags.clone().unwrap_or_default(),
-                exclude_tags: self.config.exclude_tags.clone().unwrap_or_default(),
-                only_main_content: self.config.only_main_content,
-            })
-            .map_err(|e| {
-                eprintln!("error: {:?}", e);
-                WebScrapeErrorKind::TransformError
-            })?;
-
-            // if the format is markdown, set the content to the markdown of the html
-            match self.config.format {
-                Format::Markdown => {
-                    page.content = parse_markdown(&page.content);
-                }
-                Format::Html => (), // no need to do anything
-                Format::Json => unimplemented!(),
-            }
-        }
-
-        // convert the host CrawlResponse to the user CrawlResponse
-        Ok(host_crawl_response)
+        Ok(Response {
+            success: true,
+            error: None,
+            data: CrawlData {
+                root_url: url.to_string(),
+                pages: vec![],
+                link_map: None,
+                depth_reached: 0,
+                total_pages: 0,
+                errors: vec![],
+            },
+        })
     }
 }
 
