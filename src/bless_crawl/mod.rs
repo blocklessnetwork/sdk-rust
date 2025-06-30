@@ -75,12 +75,17 @@ use mock_ffi::*;
 pub struct ScrapeOptions {
     pub timeout: u32,
     pub wait_time: u32,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub include_tags: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub exclude_tags: Option<Vec<String>>,
     pub only_main_content: bool,
     pub format: Format,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub viewport: Option<Viewport>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub user_agent: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub headers: Option<HashMap<String, String>>,
 }
 
@@ -125,58 +130,97 @@ impl std::str::FromStr for Format {
 
 #[derive(Debug, Clone, Default, PartialEq, serde::Serialize)]
 pub struct Viewport {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub width: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub height: Option<u32>,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, serde::Serialize)]
 pub struct MapOptions {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub link_types: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub base_url: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub filter_extensions: Option<Vec<String>>,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, serde::Serialize)]
 pub struct CrawlOptions {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub limit: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub max_depth: Option<u8>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub exclude_paths: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub include_paths: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub follow_external: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub delay_between_requests: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub parallel_requests: Option<u32>,
 }
 
 #[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
 pub struct PageMetadata {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
     pub url: String,
     pub status_code: u16,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub language: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub keywords: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub robots: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub author: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub creator: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub publisher: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub og_title: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub og_description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub og_image: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub og_url: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub og_site_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub og_type: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub twitter_title: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub twitter_description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub twitter_image: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub twitter_card: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub twitter_site: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub twitter_creator: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub favicon: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub viewport: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub referrer: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub content_type: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub scrape_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub source_url: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub proxy_used: Option<String>,
 }
 
@@ -192,6 +236,7 @@ pub struct ScrapeData {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Response<T> {
     pub success: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub error: Option<String>,
     pub data: T,
 }
@@ -222,6 +267,7 @@ pub struct CrawlError {
 pub struct CrawlData<T> {
     pub root_url: String,
     pub pages: Vec<T>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub link_map: Option<MapData>,
     pub depth_reached: u8,
     pub total_pages: usize,
