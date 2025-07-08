@@ -1,4 +1,5 @@
-use blockless_sdk::*;
+use blockless_sdk::http::HttpClient;
+use blockless_sdk::read_stdin;
 use serde_json::json;
 use std::collections::HashMap;
 
@@ -19,17 +20,13 @@ fn main() {
         .trim();
 
     // perform http request
-    let http_opts = HttpOptions::new("GET", 30, 10);
-    let http_res = BlocklessHttp::open(
-        format!(
-            "https://api.coingecko.com/api/v3/simple/price?ids={}&vs_currencies=usd",
-            coin_id
-        )
-        .as_str(),
-        &http_opts,
-    )
-    .unwrap();
-    let body = http_res.get_all_body().unwrap(); // e.g. {"bitcoin":{"usd":67675}}
+    let client = HttpClient::new();
+    let url = format!(
+        "https://api.coingecko.com/api/v3/simple/price?ids={}&vs_currencies=usd",
+        coin_id
+    );
+    let response = client.get(&url).send().unwrap();
+    let body = response.bytes().to_vec(); // e.g. {"bitcoin":{"usd":67675}}
 
     // println!("{}", String::from_utf8(body.clone()).unwrap());
 

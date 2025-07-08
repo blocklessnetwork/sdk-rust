@@ -9,33 +9,7 @@
 2. Use follow command for build the project.
 
 ```bash
-$ cargo build
-```
-
-HTTP example
-
-```rust
-use blockless_sdk::*;
-use json;
-
-fn main() {
-    let opts = HttpOptions::new("GET", 30, 10);
-    let http = BlocklessHttp::open("https://demo.bls.dev/tokens", &opts);
-    let http = http.unwrap();
-    let body = http.get_all_body().unwrap();
-    let body = String::from_utf8(body).unwrap();
-    let tokens = match json::parse(&body).unwrap() {
-        json::JsonValue::Object(o) => o,
-        _ => panic!("must be object"),
-    };
-    let tokens = match tokens.get("tokens") {
-        Some(json::JsonValue::Array(tokens)) => tokens,
-        _ => panic!("must be array"),
-    };
-    tokens.iter().for_each(|s| {
-        println!("{:?}", s.as_str());
-    });
-}
+cargo build --release --target wasm32-wasip1
 ```
 
 ## Install from [crates.io](https://crates.io/crates/blockless-sdk)
@@ -58,14 +32,14 @@ cargo build --release --target wasm32-wasip1 --example coingecko_oracle
 echo "bitcoin" | runtime target/wasm32-wasip1/release/examples/coingecko_oracle.wasm --permission https://api.coingecko.com/
 ```
 
-### [HTTP](./examples/httpbin.rs)
+### [HTTP](./examples/http_client.rs)
 
 ```sh
 # Build example
-cargo build --release --target wasm32-wasip1 --example httpbin
+cargo build --release --target wasm32-wasip1 --example http_client
 
 # Run example with blockless runtime
-~/.bls/runtime/bls-runtime target/wasm32-wasip1/release/examples/httpbin.wasm --permission http://httpbin.org/anything
+~/.bls/runtime/bls-runtime target/wasm32-wasip1/release/examples/http_client.wasm --permission http://httpbin.org/anything
 ```
 
 ### [LLM-MCP](./examples/llm-mcp.rs)
@@ -83,8 +57,8 @@ cargo build --release --target wasm32-wasip1 --example llm-mcp
 
 | Example | Description | [Browser runtime](https://github.com/blocklessnetwork/b7s-browser) support | [Native runtime](https://github.com/blessnetwork/bls-runtime) support |
 | ------- | ----------- | --------------- | --------------- |
-| [coingecko_oracle](./examples/coingecko_oracle.rs) | Coingecko Oracle to query price of bitcoin from coingecko | ✅ | ✅ |
-| [httpbin](./examples/httpbin.rs) | HTTP to query anything from httpbin | ✅ | ✅ |
+| [coingecko_oracle](./examples/coingecko_oracle.rs) | Coingecko Oracle to query price of bitcoin from coingecko | ✅ | ❌ |
+| [http_client](./examples/http_client.rs) | HTTP client demonstrating various request types (GET, POST, auth, multipart) | ✅ | ❌ |
 | [llm](./examples/llm.rs) | LLM to chat with `Llama-3.1-8B-Instruct-q4f32_1-MLC` and `SmolLM2-1.7B-Instruct-q4f16_1-MLC` models | ✅ | ✅ |
 | [llm-mcp](./examples/llm-mcp.rs) | LLM with MCP (Model Control Protocol) demonstrating tool integration using SSE endpoints | ✅ | ✅ |
 | [web-scrape](./examples/web-scrape.rs) | Web Scraping to scrape content from a single URL with custom configuration overrides | ✅ | ❌ |

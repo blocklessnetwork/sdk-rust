@@ -10,6 +10,7 @@ license = "MIT/Apache-2.0"
 repository = "https://github.com/blocklessnetwork/sdk-rust"
 
 [dependencies]
+base64 = { version = "0.13", default-features = false, features = ["alloc"] }
 htmd = { version = "0.2.2", default-features = false }
 json = { version = "0.12", default-features = false }
 kuchikiki = { version = "0.8", default-features = false }
