@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::fmt::Write;
 
 type ExitCode = u32;
 
@@ -65,22 +64,6 @@ pub enum HttpBody {
     Binary(Vec<u8>),
     Form(HashMap<String, String>),
     Multipart(Vec<MultipartField>),
-}
-
-#[derive(Debug, Clone, PartialEq, serde::Serialize)]
-pub struct MultipartField {
-    pub name: String,
-    pub value: MultipartValue,
-}
-
-#[derive(Debug, Clone, PartialEq, serde::Serialize)]
-pub enum MultipartValue {
-    Text(String),
-    Binary {
-        data: Vec<u8>,
-        filename: Option<String>,
-        content_type: Option<String>,
-    },
 }
 
 impl Default for HttpOptions {
@@ -561,38 +544,48 @@ pub fn build_url_with_params(base_url: &str, params: &HashMap<String, String>) -
     if params.is_empty() {
         return base_url.to_string();
     }
-
-    let url_encode = |s: &str| -> String {
-        let mut encoded = String::new();
-        for byte in s.bytes() {
-            match byte {
-                b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
-                    encoded.push(byte as char);
-                }
-                _ => {
-                    write!(&mut encoded, "%{:02X}", byte).unwrap();
-                }
+    match url::Url::parse(base_url) {
+        Ok(mut url) => {
+            for (key, value) in params {
+                url.query_pairs_mut().append_pair(key, value);
             }
+            url.to_string()
         }
-        encoded
-    };
+        Err(_) => {
+            // Fallback for invalid URLs - append query parameters manually
+            let mut url = base_url.to_string();
+            let separator = if url.contains('?') { '&' } else { '?' };
+            url.push(separator);
 
-    let mut url = base_url.to_string();
-    let separator = if url.contains('?') { '&' } else { '?' };
-    url.push(separator);
-
-    let mut first = true;
-    for (key, value) in params {
-        if !first {
-            url.push('&');
+            let encoded_params: Vec<String> = params
+                .iter()
+                .map(|(k, v)| {
+                    format!(
+                        "{}={}",
+                        url::form_urlencoded::byte_serialize(k.as_bytes()).collect::<String>(),
+                        url::form_urlencoded::byte_serialize(v.as_bytes()).collect::<String>()
+                    )
+                })
+                .collect();
+            url.push_str(&encoded_params.join("&"));
+            url
         }
-        first = false;
-        url.push_str(&url_encode(key));
-        url.push('=');
-        url.push_str(&url_encode(value));
     }
+}
 
-    url
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
+pub enum MultipartValue {
+    Text(String),
+    Binary {
+        data: Vec<u8>,
+        filename: Option<String>,
+        content_type: Option<String>,
+    },
+}
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
+pub struct MultipartField {
+    pub name: String,
+    pub value: MultipartValue,
 }
 
 impl MultipartField {
@@ -716,8 +709,43 @@ mod tests {
 
         let url = build_url_with_params("https://example.com/api", &params);
         assert!(url.contains("key1=value1"));
-        assert!(url.contains("key2=value%20with%20spaces"));
+        assert!(url.contains("key2=value+with+spaces"));
         assert!(url.starts_with("https://example.com/api?"));
+    }
+
+    #[test]
+    fn test_url_building_special_chars() {
+        let mut params = HashMap::new();
+        params.insert("special".to_string(), "!@#$%^&*()".to_string());
+        params.insert("utf8".to_string(), "こんにちは".to_string());
+        params.insert("reserved".to_string(), "test&foo=bar".to_string());
+
+        let url = build_url_with_params("https://example.com/api", &params);
+
+        // Check that special characters are properly encoded
+        // Note: url crate uses + for spaces and different encoding for some chars
+        assert!(url.contains("special=%21%40%23%24%25%5E%26*%28%29"));
+        assert!(url.contains("reserved=test%26foo%3Dbar"));
+        // UTF-8 characters should be percent-encoded
+        assert!(url.contains("utf8=%E3%81%93%E3%82%93%E3%81%AB%E3%81%A1%E3%81%AF"));
+    }
+
+    #[test]
+    fn test_url_building_with_existing_query() {
+        let mut params = HashMap::new();
+        params.insert("new_param".to_string(), "new_value".to_string());
+
+        let url = build_url_with_params("https://example.com/api?existing=param", &params);
+        assert!(url.contains("existing=param"));
+        assert!(url.contains("new_param=new_value"));
+        assert!(url.contains("&"));
+    }
+
+    #[test]
+    fn test_url_building_empty_params() {
+        let params = HashMap::new();
+        let url = build_url_with_params("https://example.com/api", &params);
+        assert_eq!(url, "https://example.com/api");
     }
 
     #[test]
@@ -812,7 +840,7 @@ mod tests {
         let url = build_url_with_params("https://api.example.com/search", &request.query_params);
         assert!(url.contains("base=param"));
         assert!(url.contains("additional=value"));
-        assert!(url.contains("special%20chars=test%20%26%20encode"));
+        assert!(url.contains("special+chars=test+%26+encode"));
     }
 
     #[test]
