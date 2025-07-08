@@ -298,21 +298,18 @@ impl RequestBuilder {
         self
     }
 
-    pub fn json<T: serde::Serialize>(mut self, json: &T) -> Result<Self, Error> {
-        let json_body = serde_json::to_string(json).map_err(|_| Error::SerializationError)?;
+    pub fn json<T: serde::Serialize>(mut self, json: &T) -> Result<Self, HttpError> {
+        let json_body = serde_json::to_string(json).map_err(|_| HttpError::SerializationError)?;
         self.body = Some(HttpBody::Text(json_body));
         self.headers
             .insert("Content-Type".to_string(), "application/json".to_string());
         Ok(self)
     }
 
-    pub fn send(self) -> Result<Response, Error> {
+    pub fn send(self) -> Result<HttpResponse, HttpError> {
         self.client.execute(&self)
     }
 }
-
-pub type Response = HttpResponse;
-pub type Error = HttpError;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct HttpResponse {
@@ -441,7 +438,7 @@ impl HttpClient {
         }
     }
 
-    fn execute(&self, builder: &RequestBuilder) -> Result<Response, Error> {
+    fn execute(&self, builder: &RequestBuilder) -> Result<HttpResponse, HttpError> {
         let options = HttpOptions {
             method: Some(builder.method.clone()),
             headers: if builder.headers.is_empty() {
@@ -461,11 +458,11 @@ impl HttpClient {
         self.make_request(&builder.url, options)
     }
 
-    fn make_request(&self, url: &str, options: HttpOptions) -> Result<Response, Error> {
+    fn make_request(&self, url: &str, options: HttpOptions) -> Result<HttpResponse, HttpError> {
         const MAX_RESPONSE_SIZE: usize = 10 * 1024 * 1024; // 10MB max response
 
         if url.is_empty() {
-            return Err(Error::InvalidUrl);
+            return Err(HttpError::InvalidUrl);
         }
 
         // Build final URL with query parameters
@@ -476,7 +473,7 @@ impl HttpClient {
         };
 
         let options_json =
-            serde_json::to_string(&options).map_err(|_| Error::SerializationError)?;
+            serde_json::to_string(&options).map_err(|_| HttpError::SerializationError)?;
 
         let mut result_buffer = vec![0u8; MAX_RESPONSE_SIZE];
         let mut bytes_written: u32 = 0;
@@ -494,26 +491,26 @@ impl HttpClient {
         };
 
         if exit_code != 0 {
-            return Err(Error::from_code(exit_code));
+            return Err(HttpError::from_code(exit_code));
         }
 
         if bytes_written == 0 {
-            return Err(Error::EmptyResponse);
+            return Err(HttpError::EmptyResponse);
         }
 
         let response_bytes = &result_buffer[..bytes_written as usize];
 
         let http_result: HttpResult =
-            serde_json::from_slice(response_bytes).map_err(|_| Error::JsonParseError)?;
+            serde_json::from_slice(response_bytes).map_err(|_| HttpError::JsonParseError)?;
 
         if !http_result.success {
             let error_msg = http_result
                 .error
                 .unwrap_or_else(|| "Unknown error".to_string());
-            return Err(Error::RequestFailed(error_msg));
+            return Err(HttpError::RequestFailed(error_msg));
         }
 
-        http_result.data.ok_or(Error::EmptyResponse)
+        http_result.data.ok_or(HttpError::EmptyResponse)
     }
 }
 
