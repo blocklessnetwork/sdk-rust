@@ -43,6 +43,17 @@ mod mock_ffi {
 #[cfg(feature = "mock-ffi")]
 use mock_ffi::*;
 
+const MAX_RESPONSE_SIZE: usize = 10 * 1024 * 1024; // 10MB max response
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
+#[serde(untagged)]
+pub enum HttpBody {
+    Text(String),
+    Binary(Vec<u8>),
+    Form(HashMap<String, String>),
+    Multipart(Vec<MultipartField>),
+}
+
 #[derive(Debug, Clone, PartialEq, serde::Serialize)]
 pub struct HttpOptions {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -55,15 +66,6 @@ pub struct HttpOptions {
     pub timeout: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub query_params: Option<HashMap<String, String>>,
-}
-
-#[derive(Debug, Clone, PartialEq, serde::Serialize)]
-#[serde(untagged)]
-pub enum HttpBody {
-    Text(String),
-    Binary(Vec<u8>),
-    Form(HashMap<String, String>),
-    Multipart(Vec<MultipartField>),
 }
 
 impl Default for HttpOptions {
@@ -165,6 +167,305 @@ impl HttpOptions {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
+pub enum MultipartValue {
+    Text(String),
+    Binary {
+        data: Vec<u8>,
+        filename: Option<String>,
+        content_type: Option<String>,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
+pub struct MultipartField {
+    pub name: String,
+    pub value: MultipartValue,
+}
+
+impl MultipartField {
+    pub fn text<N: Into<String>, V: Into<String>>(name: N, value: V) -> Self {
+        Self {
+            name: name.into(),
+            value: MultipartValue::Text(value.into()),
+        }
+    }
+
+    pub fn binary<N: Into<String>>(
+        name: N,
+        data: Vec<u8>,
+        filename: Option<String>,
+        content_type: Option<String>,
+    ) -> Self {
+        Self {
+            name: name.into(),
+            value: MultipartValue::Binary {
+                data,
+                filename,
+                content_type,
+            },
+        }
+    }
+
+    pub fn file<N: Into<String>, F: Into<String>>(
+        name: N,
+        data: Vec<u8>,
+        filename: F,
+        content_type: Option<String>,
+    ) -> Self {
+        Self {
+            name: name.into(),
+            value: MultipartValue::Binary {
+                data,
+                filename: Some(filename.into()),
+                content_type,
+            },
+        }
+    }
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct HttpResponse {
+    pub status: u16,
+    pub headers: HashMap<String, String>,
+    pub body: Vec<u8>,
+    pub url: String,
+}
+
+impl HttpResponse {
+    pub fn text(&self) -> Result<String, HttpError> {
+        String::from_utf8(self.body.clone()).map_err(|_| HttpError::Utf8Error)
+    }
+
+    pub fn json<T: serde::de::DeserializeOwned>(&self) -> Result<T, HttpError> {
+        let text = self.text()?;
+        serde_json::from_str(&text).map_err(|_| HttpError::JsonParseError)
+    }
+
+    pub fn bytes(&self) -> &[u8] {
+        &self.body
+    }
+
+    pub fn status(&self) -> u16 {
+        self.status
+    }
+
+    pub fn is_success(&self) -> bool {
+        self.status >= 200 && self.status < 300
+    }
+
+    pub fn headers(&self) -> &HashMap<String, String> {
+        &self.headers
+    }
+
+    pub fn header(&self, name: &str) -> Option<&String> {
+        self.headers.get(name)
+    }
+
+    pub fn url(&self) -> &str {
+        &self.url
+    }
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct HttpResult {
+    pub success: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub data: Option<HttpResponse>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+pub enum HttpError {
+    InvalidUrl,
+    SerializationError,
+    JsonParseError,
+    Utf8Error,
+    EmptyResponse,
+    RequestFailed(String),
+    NetworkError,
+    Timeout,
+    Unknown(u32),
+}
+
+impl HttpError {
+    fn from_code(code: u32) -> Self {
+        match code {
+            1 => HttpError::InvalidUrl,
+            2 => HttpError::Timeout,
+            3 => HttpError::NetworkError,
+            _ => HttpError::Unknown(code),
+        }
+    }
+}
+
+impl std::fmt::Display for HttpError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            HttpError::InvalidUrl => write!(f, "Invalid URL provided"),
+            HttpError::SerializationError => write!(f, "Failed to serialize request data"),
+            HttpError::JsonParseError => write!(f, "Failed to parse JSON response"),
+            HttpError::Utf8Error => write!(f, "Invalid UTF-8 in response"),
+            HttpError::EmptyResponse => write!(f, "Empty response received"),
+            HttpError::RequestFailed(msg) => write!(f, "Request failed: {}", msg),
+            HttpError::NetworkError => write!(f, "Network error occurred"),
+            HttpError::Timeout => write!(f, "Request timed out"),
+            HttpError::Unknown(code) => write!(f, "Unknown error (code: {})", code),
+        }
+    }
+}
+
+impl std::error::Error for HttpError {}
+
+pub struct HttpClient {
+    default_headers: Option<HashMap<String, String>>,
+    timeout: Option<u32>,
+}
+
+impl Default for HttpClient {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Clone for HttpClient {
+    fn clone(&self) -> Self {
+        Self {
+            default_headers: self.default_headers.clone(),
+            timeout: self.timeout,
+        }
+    }
+}
+
+impl HttpClient {
+    pub fn new() -> Self {
+        Self {
+            default_headers: None,
+            timeout: Some(30000), // 30 seconds default
+        }
+    }
+
+    pub fn builder() -> HttpClientBuilder {
+        HttpClientBuilder::new()
+    }
+
+    // HTTP verb methods - return RequestBuilder for chaining
+    pub fn get<U: Into<String>>(&self, url: U) -> RequestBuilder {
+        self.request("GET", url)
+    }
+
+    pub fn post<U: Into<String>>(&self, url: U) -> RequestBuilder {
+        self.request("POST", url)
+    }
+
+    pub fn put<U: Into<String>>(&self, url: U) -> RequestBuilder {
+        self.request("PUT", url)
+    }
+
+    pub fn patch<U: Into<String>>(&self, url: U) -> RequestBuilder {
+        self.request("PATCH", url)
+    }
+
+    pub fn delete<U: Into<String>>(&self, url: U) -> RequestBuilder {
+        self.request("DELETE", url)
+    }
+
+    pub fn head<U: Into<String>>(&self, url: U) -> RequestBuilder {
+        self.request("HEAD", url)
+    }
+
+    pub fn request<U: Into<String>>(&self, method: &str, url: U) -> RequestBuilder {
+        let mut headers = HashMap::new();
+        if let Some(ref default_headers) = self.default_headers {
+            headers.extend(default_headers.clone());
+        }
+
+        RequestBuilder {
+            client: self.clone(),
+            method: method.to_string(),
+            url: url.into(),
+            headers,
+            query_params: HashMap::new(),
+            body: None,
+            timeout: self.timeout,
+        }
+    }
+
+    fn execute(&self, builder: &RequestBuilder) -> Result<HttpResponse, HttpError> {
+        let options = HttpOptions {
+            method: Some(builder.method.clone()),
+            headers: if builder.headers.is_empty() {
+                None
+            } else {
+                Some(builder.headers.clone())
+            },
+            body: builder.body.clone(),
+            timeout: builder.timeout,
+            query_params: if builder.query_params.is_empty() {
+                None
+            } else {
+                Some(builder.query_params.clone())
+            },
+        };
+
+        self.make_request(&builder.url, options)
+    }
+
+    fn make_request(&self, url: &str, options: HttpOptions) -> Result<HttpResponse, HttpError> {
+        if url.is_empty() {
+            return Err(HttpError::InvalidUrl);
+        }
+
+        // Build final URL with query parameters
+        let final_url = if let Some(ref params) = options.query_params {
+            build_url_with_params(url, params)
+        } else {
+            url.to_string()
+        };
+
+        let options_json =
+            serde_json::to_string(&options).map_err(|_| HttpError::SerializationError)?;
+
+        let mut result_buffer = vec![0u8; MAX_RESPONSE_SIZE];
+        let mut bytes_written: u32 = 0;
+
+        let exit_code = unsafe {
+            http_call(
+                final_url.as_ptr(),
+                final_url.len() as u32,
+                options_json.as_ptr(),
+                options_json.len() as u32,
+                result_buffer.as_mut_ptr(),
+                MAX_RESPONSE_SIZE as u32,
+                &mut bytes_written,
+            )
+        };
+
+        if exit_code != 0 {
+            return Err(HttpError::from_code(exit_code));
+        }
+
+        if bytes_written == 0 {
+            return Err(HttpError::EmptyResponse);
+        }
+
+        let response_bytes = &result_buffer[..bytes_written as usize];
+
+        let http_result: HttpResult =
+            serde_json::from_slice(response_bytes).map_err(|_| HttpError::JsonParseError)?;
+
+        if !http_result.success {
+            let error_msg = http_result
+                .error
+                .unwrap_or_else(|| "Unknown error".to_string());
+            return Err(HttpError::RequestFailed(error_msg));
+        }
+
+        http_result.data.ok_or(HttpError::EmptyResponse)
+    }
+}
+
 pub struct HttpClientBuilder {
     default_headers: Option<HashMap<String, String>>,
     timeout: Option<u32>,
@@ -201,14 +502,14 @@ impl HttpClientBuilder {
         }
     }
 }
-
-impl Clone for HttpClient {
-    fn clone(&self) -> Self {
-        Self {
-            default_headers: self.default_headers.clone(),
-            timeout: self.timeout,
-        }
-    }
+pub struct RequestBuilder {
+    client: HttpClient,
+    method: String,
+    url: String,
+    headers: HashMap<String, String>,
+    query_params: HashMap<String, String>,
+    body: Option<HttpBody>,
+    timeout: Option<u32>,
 }
 
 impl RequestBuilder {
@@ -294,252 +595,10 @@ impl RequestBuilder {
     }
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct HttpResponse {
-    pub status: u16,
-    pub headers: HashMap<String, String>,
-    pub body: Vec<u8>,
-    pub url: String,
-}
+// ====================
+// Utility Functions
+// ====================
 
-impl HttpResponse {
-    pub fn text(&self) -> Result<String, HttpError> {
-        String::from_utf8(self.body.clone()).map_err(|_| HttpError::Utf8Error)
-    }
-
-    pub fn json<T: serde::de::DeserializeOwned>(&self) -> Result<T, HttpError> {
-        let text = self.text()?;
-        serde_json::from_str(&text).map_err(|_| HttpError::JsonParseError)
-    }
-
-    pub fn bytes(&self) -> &[u8] {
-        &self.body
-    }
-
-    pub fn status(&self) -> u16 {
-        self.status
-    }
-
-    pub fn is_success(&self) -> bool {
-        self.status >= 200 && self.status < 300
-    }
-
-    pub fn headers(&self) -> &HashMap<String, String> {
-        &self.headers
-    }
-
-    pub fn header(&self, name: &str) -> Option<&String> {
-        self.headers.get(name)
-    }
-
-    pub fn url(&self) -> &str {
-        &self.url
-    }
-}
-
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct HttpResult {
-    pub success: bool,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub data: Option<HttpResponse>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub error: Option<String>,
-}
-
-pub struct HttpClient {
-    default_headers: Option<HashMap<String, String>>,
-    timeout: Option<u32>,
-}
-
-pub struct RequestBuilder {
-    client: HttpClient,
-    method: String,
-    url: String,
-    headers: HashMap<String, String>,
-    query_params: HashMap<String, String>,
-    body: Option<HttpBody>,
-    timeout: Option<u32>,
-}
-
-impl Default for HttpClient {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl HttpClient {
-    pub fn new() -> Self {
-        Self {
-            default_headers: None,
-            timeout: Some(30000), // 30 seconds default
-        }
-    }
-
-    pub fn builder() -> HttpClientBuilder {
-        HttpClientBuilder::new()
-    }
-
-    // HTTP verb methods - return RequestBuilder for chaining
-    pub fn get<U: Into<String>>(&self, url: U) -> RequestBuilder {
-        self.request("GET", url)
-    }
-
-    pub fn post<U: Into<String>>(&self, url: U) -> RequestBuilder {
-        self.request("POST", url)
-    }
-
-    pub fn put<U: Into<String>>(&self, url: U) -> RequestBuilder {
-        self.request("PUT", url)
-    }
-
-    pub fn patch<U: Into<String>>(&self, url: U) -> RequestBuilder {
-        self.request("PATCH", url)
-    }
-
-    pub fn delete<U: Into<String>>(&self, url: U) -> RequestBuilder {
-        self.request("DELETE", url)
-    }
-
-    pub fn head<U: Into<String>>(&self, url: U) -> RequestBuilder {
-        self.request("HEAD", url)
-    }
-
-    pub fn request<U: Into<String>>(&self, method: &str, url: U) -> RequestBuilder {
-        let mut headers = HashMap::new();
-        if let Some(ref default_headers) = self.default_headers {
-            headers.extend(default_headers.clone());
-        }
-
-        RequestBuilder {
-            client: self.clone(),
-            method: method.to_string(),
-            url: url.into(),
-            headers,
-            query_params: HashMap::new(),
-            body: None,
-            timeout: self.timeout,
-        }
-    }
-
-    fn execute(&self, builder: &RequestBuilder) -> Result<HttpResponse, HttpError> {
-        let options = HttpOptions {
-            method: Some(builder.method.clone()),
-            headers: if builder.headers.is_empty() {
-                None
-            } else {
-                Some(builder.headers.clone())
-            },
-            body: builder.body.clone(),
-            timeout: builder.timeout,
-            query_params: if builder.query_params.is_empty() {
-                None
-            } else {
-                Some(builder.query_params.clone())
-            },
-        };
-
-        self.make_request(&builder.url, options)
-    }
-
-    fn make_request(&self, url: &str, options: HttpOptions) -> Result<HttpResponse, HttpError> {
-        const MAX_RESPONSE_SIZE: usize = 10 * 1024 * 1024; // 10MB max response
-
-        if url.is_empty() {
-            return Err(HttpError::InvalidUrl);
-        }
-
-        // Build final URL with query parameters
-        let final_url = if let Some(ref params) = options.query_params {
-            build_url_with_params(url, params)
-        } else {
-            url.to_string()
-        };
-
-        let options_json =
-            serde_json::to_string(&options).map_err(|_| HttpError::SerializationError)?;
-
-        let mut result_buffer = vec![0u8; MAX_RESPONSE_SIZE];
-        let mut bytes_written: u32 = 0;
-
-        let exit_code = unsafe {
-            http_call(
-                final_url.as_ptr(),
-                final_url.len() as u32,
-                options_json.as_ptr(),
-                options_json.len() as u32,
-                result_buffer.as_mut_ptr(),
-                MAX_RESPONSE_SIZE as u32,
-                &mut bytes_written,
-            )
-        };
-
-        if exit_code != 0 {
-            return Err(HttpError::from_code(exit_code));
-        }
-
-        if bytes_written == 0 {
-            return Err(HttpError::EmptyResponse);
-        }
-
-        let response_bytes = &result_buffer[..bytes_written as usize];
-
-        let http_result: HttpResult =
-            serde_json::from_slice(response_bytes).map_err(|_| HttpError::JsonParseError)?;
-
-        if !http_result.success {
-            let error_msg = http_result
-                .error
-                .unwrap_or_else(|| "Unknown error".to_string());
-            return Err(HttpError::RequestFailed(error_msg));
-        }
-
-        http_result.data.ok_or(HttpError::EmptyResponse)
-    }
-}
-
-#[derive(Debug, Clone)]
-pub enum HttpError {
-    InvalidUrl,
-    SerializationError,
-    JsonParseError,
-    Utf8Error,
-    EmptyResponse,
-    RequestFailed(String),
-    NetworkError,
-    Timeout,
-    Unknown(u32),
-}
-
-impl HttpError {
-    fn from_code(code: u32) -> Self {
-        match code {
-            1 => HttpError::InvalidUrl,
-            2 => HttpError::Timeout,
-            3 => HttpError::NetworkError,
-            _ => HttpError::Unknown(code),
-        }
-    }
-}
-
-impl std::fmt::Display for HttpError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            HttpError::InvalidUrl => write!(f, "Invalid URL provided"),
-            HttpError::SerializationError => write!(f, "Failed to serialize request data"),
-            HttpError::JsonParseError => write!(f, "Failed to parse JSON response"),
-            HttpError::Utf8Error => write!(f, "Invalid UTF-8 in response"),
-            HttpError::EmptyResponse => write!(f, "Empty response received"),
-            HttpError::RequestFailed(msg) => write!(f, "Request failed: {}", msg),
-            HttpError::NetworkError => write!(f, "Network error occurred"),
-            HttpError::Timeout => write!(f, "Request timed out"),
-            HttpError::Unknown(code) => write!(f, "Unknown error (code: {})", code),
-        }
-    }
-}
-
-impl std::error::Error for HttpError {}
-
-// Utility functions
 pub fn build_url_with_params(base_url: &str, params: &HashMap<String, String>) -> String {
     if params.is_empty() {
         return base_url.to_string();
@@ -573,63 +632,10 @@ pub fn build_url_with_params(base_url: &str, params: &HashMap<String, String>) -
     }
 }
 
-#[derive(Debug, Clone, PartialEq, serde::Serialize)]
-pub enum MultipartValue {
-    Text(String),
-    Binary {
-        data: Vec<u8>,
-        filename: Option<String>,
-        content_type: Option<String>,
-    },
-}
-#[derive(Debug, Clone, PartialEq, serde::Serialize)]
-pub struct MultipartField {
-    pub name: String,
-    pub value: MultipartValue,
-}
+// ====================
+// Module-level Convenience Functions
+// ====================
 
-impl MultipartField {
-    pub fn text<N: Into<String>, V: Into<String>>(name: N, value: V) -> Self {
-        Self {
-            name: name.into(),
-            value: MultipartValue::Text(value.into()),
-        }
-    }
-
-    pub fn binary<N: Into<String>>(
-        name: N,
-        data: Vec<u8>,
-        filename: Option<String>,
-        content_type: Option<String>,
-    ) -> Self {
-        Self {
-            name: name.into(),
-            value: MultipartValue::Binary {
-                data,
-                filename,
-                content_type,
-            },
-        }
-    }
-
-    pub fn file<N: Into<String>, F: Into<String>>(
-        name: N,
-        data: Vec<u8>,
-        filename: F,
-        content_type: Option<String>,
-    ) -> Self {
-        Self {
-            name: name.into(),
-            value: MultipartValue::Binary {
-                data,
-                filename: Some(filename.into()),
-                content_type,
-            },
-        }
-    }
-}
-
-// Module-level convenience functions (like reqwest)
 pub fn get<U: Into<String>>(url: U) -> RequestBuilder {
     HttpClient::new().get(url)
 }
