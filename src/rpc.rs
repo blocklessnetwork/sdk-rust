@@ -87,47 +87,6 @@ pub struct JsonRpcError {
 }
 
 /// Unified RPC client for calling host functions
-///
-/// # Example Usage
-///
-/// ```rust
-/// use blockless_sdk::rpc::RpcClient;
-/// use serde::{Serialize, Deserialize};
-///
-/// #[derive(Serialize, Deserialize)]
-/// struct HttpRequest {
-///     url: String,
-///     method: String,
-/// }
-///
-/// #[derive(Serialize, Deserialize)]
-/// struct HttpResponse {
-///     status: u16,
-///     body: String,
-/// }
-///
-/// // Create client with default 4KB buffer
-/// let mut client = RpcClient::new();
-///
-/// // Create client with custom buffer size (e.g., 10MB for HTTP responses)
-/// let mut client = RpcClient::with_buffer_size(10 * 1024 * 1024);
-///
-/// // Type-safe method call
-/// let request = HttpRequest {
-///     url: "https://api.example.com".to_string(),
-///     method: "GET".to_string(),
-/// };
-///
-/// let response: JsonRpcResponse<HttpResponse> = client.call("http.request", Some(request))?;
-///
-/// // Convenience methods
-/// let pong = client.ping()?;
-/// let echo_result = client.echo("Hello World!")?;
-/// let version = client.version()?;
-///
-/// // Modify buffer size after creation
-/// client.set_buffer_size(1024 * 1024); // 1MB buffer
-/// ```
 pub struct RpcClient {
     next_id: u32,
     buffer_size: usize,
