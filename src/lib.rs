@@ -6,6 +6,7 @@ mod memory;
 mod socket;
 
 pub mod http;
+pub mod rpc;
 
 pub use bless_crawl::*;
 pub use cgi::*;
