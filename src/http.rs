@@ -1,5 +1,5 @@
+use crate::rpc::{JsonRpcResponse, RpcClient, RpcError};
 use std::collections::HashMap;
-use crate::rpc::{RpcClient, RpcError, JsonRpcResponse};
 
 const MAX_RESPONSE_SIZE: usize = 10 * 1024 * 1024; // 10MB max response
 
@@ -391,10 +391,14 @@ impl HttpClient {
             options,
         };
         let mut rpc_client = RpcClient::with_buffer_size(MAX_RESPONSE_SIZE);
-        let response: JsonRpcResponse<HttpResult> = rpc_client.call("http.request", Some(request))?;
+        let response: JsonRpcResponse<HttpResult> =
+            rpc_client.call("http.request", Some(request))?;
 
         if let Some(error) = response.error {
-            return Err(HttpError::RequestFailed(format!("RPC error: {} (code: {})", error.message, error.code)));
+            return Err(HttpError::RequestFailed(format!(
+                "RPC error: {} (code: {})",
+                error.message, error.code
+            )));
         }
         let http_result = response.result.ok_or(HttpError::EmptyResponse)?;
 

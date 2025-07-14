@@ -13,31 +13,31 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Example 2: Echo with different data types
     println!("\n=== Example 2: Echo Examples ===");
-    
+
     // Echo string
     match client.echo("Hello, World!".to_string()) {
         Ok(response) => println!("Echo string: {}", response),
         Err(e) => println!("Echo error: {}", e),
     }
-    
+
     // Echo number
     match client.echo(42) {
         Ok(response) => println!("Echo number: {}", response),
         Err(e) => println!("Echo error: {}", e),
     }
-    
+
     // Echo complex object
     #[derive(Serialize, Deserialize, Debug)]
     struct Person {
         name: String,
         age: u32,
     }
-    
+
     let person = Person {
         name: "Alice".to_string(),
         age: 30,
     };
-    
+
     match client.echo(person) {
         Ok(response) => println!("Echo person: {:?}", response),
         Err(e) => println!("Echo error: {}", e),
@@ -57,24 +57,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Example 4: Generic call with custom types
     println!("\n=== Example 4: Generic Call ===");
-    
+
     #[derive(Serialize, Deserialize, Debug)]
     struct CustomRequest {
         message: String,
         count: u32,
     }
-    
+
     #[derive(Serialize, Deserialize, Debug)]
     struct CustomResponse {
         processed: String,
         timestamp: u64,
     }
-    
+
     let request = CustomRequest {
         message: "Test message".to_string(),
         count: 5,
     };
-    
+
     // This would fail since "custom.process" doesn't exist in our test implementation
     match client.call::<CustomRequest, CustomResponse>("custom.process", Some(request)) {
         Ok(response) => {
@@ -89,7 +89,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Example 5: Error handling
     println!("\n=== Example 5: Error Handling ===");
-    
+
     // Try calling a non-existent method
     match client.call::<(), String>("nonexistent.method", None) {
         Ok(response) => {
