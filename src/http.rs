@@ -1,51 +1,16 @@
 use std::collections::HashMap;
-
-type ExitCode = u32;
-
-#[cfg(not(feature = "mock-ffi"))]
-#[link(wasm_import_module = "blockless_http")]
-extern "C" {
-    #[link_name = "http_call"]
-    fn http_call(
-        url_ptr: *const u8,
-        url_len: u32,
-        options_ptr: *const u8,
-        options_len: u32,
-        result_ptr: *mut u8,
-        result_max_len: u32,
-        bytes_written_ptr: *mut u32,
-    ) -> ExitCode;
-}
-
-#[cfg(feature = "mock-ffi")]
-#[allow(unused_variables)]
-mod mock_ffi {
-    use super::*;
-
-    pub unsafe fn http_call(
-        _url_ptr: *const u8,
-        _url_len: u32,
-        _options_ptr: *const u8,
-        _options_len: u32,
-        result_ptr: *mut u8,
-        result_max_len: u32,
-        bytes_written_ptr: *mut u32,
-    ) -> ExitCode {
-        let mock_response = r#"{"success":true,"data":{"status":200,"headers":{"content-type":"application/json"},"body":[123,34,104,101,108,108,111,34,58,34,119,111,114,108,100,34,125],"url":"https://httpbin.org/get"}}"#;
-        let response_bytes = mock_response.as_bytes();
-        let write_len = std::cmp::min(response_bytes.len(), result_max_len as usize);
-        std::ptr::copy_nonoverlapping(response_bytes.as_ptr(), result_ptr, write_len);
-        *bytes_written_ptr = write_len as u32;
-        0
-    }
-}
-
-#[cfg(feature = "mock-ffi")]
-use mock_ffi::*;
+use crate::rpc::{RpcClient, RpcError, JsonRpcResponse};
 
 const MAX_RESPONSE_SIZE: usize = 10 * 1024 * 1024; // 10MB max response
 
-#[derive(Debug, Clone, PartialEq, serde::Serialize)]
+// RPC request/response structures for HTTP
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct HttpRpcRequest {
+    pub url: String,
+    pub options: HttpOptions,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(untagged)]
 pub enum HttpBody {
     Text(String),
@@ -54,7 +19,7 @@ pub enum HttpBody {
     Multipart(Vec<MultipartField>),
 }
 
-#[derive(Debug, Clone, PartialEq, serde::Serialize)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct HttpOptions {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub method: Option<String>,
@@ -167,7 +132,7 @@ impl HttpOptions {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, serde::Serialize)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum MultipartValue {
     Text(String),
     Binary {
@@ -177,7 +142,7 @@ pub enum MultipartValue {
     },
 }
 
-#[derive(Debug, Clone, PartialEq, serde::Serialize)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct MultipartField {
     pub name: String,
     pub value: MultipartValue,
@@ -286,18 +251,8 @@ pub enum HttpError {
     RequestFailed(String),
     NetworkError,
     Timeout,
+    RpcError(RpcError),
     Unknown(u32),
-}
-
-impl HttpError {
-    fn from_code(code: u32) -> Self {
-        match code {
-            1 => HttpError::InvalidUrl,
-            2 => HttpError::Timeout,
-            3 => HttpError::NetworkError,
-            _ => HttpError::Unknown(code),
-        }
-    }
 }
 
 impl std::fmt::Display for HttpError {
@@ -311,8 +266,15 @@ impl std::fmt::Display for HttpError {
             HttpError::RequestFailed(msg) => write!(f, "Request failed: {}", msg),
             HttpError::NetworkError => write!(f, "Network error occurred"),
             HttpError::Timeout => write!(f, "Request timed out"),
+            HttpError::RpcError(e) => write!(f, "RPC error: {}", e),
             HttpError::Unknown(code) => write!(f, "Unknown error (code: {})", code),
         }
+    }
+}
+
+impl From<RpcError> for HttpError {
+    fn from(e: RpcError) -> Self {
+        HttpError::RpcError(e)
     }
 }
 
@@ -424,36 +386,17 @@ impl HttpClient {
             url.to_string()
         };
 
-        let options_json =
-            serde_json::to_string(&options).map_err(|_| HttpError::SerializationError)?;
-
-        let mut result_buffer = vec![0u8; MAX_RESPONSE_SIZE];
-        let mut bytes_written: u32 = 0;
-
-        let exit_code = unsafe {
-            http_call(
-                final_url.as_ptr(),
-                final_url.len() as u32,
-                options_json.as_ptr(),
-                options_json.len() as u32,
-                result_buffer.as_mut_ptr(),
-                MAX_RESPONSE_SIZE as u32,
-                &mut bytes_written,
-            )
+        let request = HttpRpcRequest {
+            url: final_url,
+            options,
         };
+        let mut rpc_client = RpcClient::with_buffer_size(MAX_RESPONSE_SIZE);
+        let response: JsonRpcResponse<HttpResult> = rpc_client.call("http.request", Some(request))?;
 
-        if exit_code != 0 {
-            return Err(HttpError::from_code(exit_code));
+        if let Some(error) = response.error {
+            return Err(HttpError::RequestFailed(format!("RPC error: {} (code: {})", error.message, error.code)));
         }
-
-        if bytes_written == 0 {
-            return Err(HttpError::EmptyResponse);
-        }
-
-        let response_bytes = &result_buffer[..bytes_written as usize];
-
-        let http_result: HttpResult =
-            serde_json::from_slice(response_bytes).map_err(|_| HttpError::JsonParseError)?;
+        let http_result = response.result.ok_or(HttpError::EmptyResponse)?;
 
         if !http_result.success {
             let error_msg = http_result
