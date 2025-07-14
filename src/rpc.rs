@@ -18,8 +18,6 @@ extern "C" {
 #[cfg(feature = "mock-ffi")]
 #[allow(unused_variables)]
 mod mock_ffi {
-    use super::*;
-
     pub unsafe fn rpc_call(
         _request_ptr: *const u8,
         _request_len: u32,
@@ -31,6 +29,9 @@ mod mock_ffi {
         0
     }
 }
+
+#[cfg(feature = "mock-ffi")]
+use mock_ffi::*;
 
 #[derive(Debug, Clone)]
 pub enum RpcError {
@@ -132,9 +133,15 @@ pub struct RpcClient {
     buffer_size: usize,
 }
 
+impl Default for RpcClient {
+    fn default() -> Self {
+        Self::with_buffer_size(4096) // Default 4KB buffer
+    }
+}
+
 impl RpcClient {
     pub fn new() -> Self {
-        Self::with_buffer_size(4096) // Default 4KB buffer
+        Self::default()
     }
 
     pub fn with_buffer_size(buffer_size: usize) -> Self {
