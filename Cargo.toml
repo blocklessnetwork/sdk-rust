@@ -11,10 +11,7 @@ repository = "https://github.com/blocklessnetwork/sdk-rust"
 
 [dependencies]
 base64 = { version = "0.13", default-features = false, features = ["alloc"], optional = true }
-htmd = { version = "0.2.2", default-features = false, optional = true }
 json = { version = "0.12", default-features = false }
-kuchikiki = { version = "0.8", default-features = false, optional = true }
-regex = { version = "1.11.1", default-features = false, features = ["unicode-case"], optional = true }
 serde = { version = "1.0", features = ["derive"], optional = true }
 serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
 url = { version = "2.5", default-features = false }
@@ -23,7 +20,6 @@ url = { version = "2.5", default-features = false }
 default = [
   "http",
   "llm",
-  "bless-crawl",
   "cgi",
   "socket",
   "memory",
@@ -32,7 +28,6 @@ default = [
 mock-ffi = []
 http = ["rpc", "dep:base64", "dep:serde"]
 llm = ["dep:serde"]
-bless-crawl = ["http", "dep:htmd", "dep:kuchikiki", "dep:regex", "dep:serde"]
 cgi = []
 socket = []
 memory = []
