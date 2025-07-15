@@ -30,9 +30,9 @@ default = [
   "rpc",
 ]
 mock-ffi = []
-http = ["rpc", "dep:serde"]
+http = ["rpc", "dep:base64", "dep:serde"]
 llm = ["dep:serde"]
-bless-crawl = ["http", "dep:base64", "dep:htmd", "dep:kuchikiki", "dep:regex", "dep:serde"]
+bless-crawl = ["http", "dep:htmd", "dep:kuchikiki", "dep:regex", "dep:serde"]
 cgi = []
 socket = []
 memory = []
