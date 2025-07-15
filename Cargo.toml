@@ -20,6 +20,22 @@ serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
 url = { version = "2.5", default-features = false }
 
 [features]
-default = ["serde"]
+default = [
+  "serde",
+  "http",
+  "llm",
+  "bless-crawl",
+  "cgi",
+  "socket",
+  "memory",
+  "rpc",
+]
 serde = ["dep:serde"]
 mock-ffi = []
+http = ["rpc","serde"]
+llm = ["serde"]
+bless-crawl = ["serde", "http"]
+cgi = []
+socket = []
+memory = []
+rpc = ["serde"]

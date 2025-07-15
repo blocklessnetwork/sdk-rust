@@ -40,8 +40,8 @@ jobs:
           # Extract all feature names from Cargo.toml
           all_features=$(toml get Cargo.toml features | jq -r 'keys[]')
           
-          # Filter out default, serde, and mock-ffi
-          features=$(echo "$all_features" | grep -v -E '^(default|serde|mock-ffi)$' | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          # Filter out default and mock-ffi
+          features=$(echo "$all_features" | grep -v -E '^(default|mock-ffi)$' | jq -R -s -c 'split("\n") | map(select(length > 0))')
           
           # Add "default" and "all" to test with default features and all features
           features=$(echo $features | jq -c '. + ["default", "all"]')
