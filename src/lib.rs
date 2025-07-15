@@ -15,6 +15,3 @@ pub mod socket;
 
 #[cfg(feature = "http")]
 pub mod http;
-
-#[cfg(feature = "bless-crawl")]
-pub mod bless_crawl;
