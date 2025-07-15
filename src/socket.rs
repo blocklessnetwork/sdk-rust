@@ -1,5 +1,3 @@
-use crate::SocketErrorKind;
-
 #[cfg(not(feature = "mock-ffi"))]
 #[link(wasm_import_module = "blockless_socket")]
 extern "C" {
@@ -42,3 +40,24 @@ pub fn create_tcp_bind_socket(addr: &str) -> Result<u32, SocketErrorKind> {
         })
     }
 }
+
+#[derive(Debug)]
+pub enum SocketErrorKind {
+    ConnectRefused,
+    ParameterError,
+    ConnectionReset,
+    AddressInUse,
+}
+
+impl std::fmt::Display for SocketErrorKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match *self {
+            SocketErrorKind::ConnectRefused => write!(f, "Connect Refused."),
+            SocketErrorKind::ParameterError => write!(f, "Parameter Error."),
+            SocketErrorKind::ConnectionReset => write!(f, "Connection  Reset."),
+            SocketErrorKind::AddressInUse => write!(f, "Address In Use."),
+        }
+    }
+}
+
+impl std::error::Error for SocketErrorKind {}

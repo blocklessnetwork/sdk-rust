@@ -184,16 +184,14 @@ impl std::fmt::Display for Models {
     }
 }
 
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
 pub struct BlocklessLlm {
     inner: Handle,
     model_name: String,
     options: LlmOptions,
 }
 
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct LlmOptions {
     pub system_message: Option<String>,
     pub tools_sse_urls: Option<Vec<String>>,

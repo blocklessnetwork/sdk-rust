@@ -1,4 +1,4 @@
-use blockless_sdk::*;
+use blockless_sdk::llm::*;
 
 /// This example demonstrates how to use the Blockless SDK to interact with two different LLM models.
 ///
