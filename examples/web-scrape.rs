@@ -1,4 +1,4 @@
-use blockless_sdk::*;
+use blockless_sdk::bless_crawl::*;
 
 /// This example demonstrates how to use the Blockless SDK to perform web scraping
 /// using the BlessCrawl functionality.

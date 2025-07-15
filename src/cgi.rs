@@ -1,4 +1,3 @@
-use crate::CGIErrorKind;
 use json::{object::Object, JsonValue};
 use std::fmt::{Debug, Display};
 
@@ -280,3 +279,28 @@ impl CGIListExtensions {
         Ok(externs)
     }
 }
+
+#[derive(Debug)]
+pub enum CGIErrorKind {
+    ListError,
+    EncodingError,
+    JsonDecodingError,
+    ExecError,
+    ReadError,
+    NoCommandError,
+}
+
+impl std::fmt::Display for CGIErrorKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match *self {
+            CGIErrorKind::ListError => write!(f, "CGI List Error."),
+            CGIErrorKind::EncodingError => write!(f, "CGI Encoding Error."),
+            CGIErrorKind::JsonDecodingError => write!(f, "Json decoding Error."),
+            CGIErrorKind::ExecError => write!(f, "CGI Exec Error."),
+            CGIErrorKind::ReadError => write!(f, "Read Error."),
+            CGIErrorKind::NoCommandError => write!(f, "No CGI Command Error."),
+        }
+    }
+}
+
+impl std::error::Error for CGIErrorKind {}

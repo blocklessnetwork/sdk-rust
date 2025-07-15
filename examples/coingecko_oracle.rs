@@ -1,10 +1,9 @@
 use blockless_sdk::http::HttpClient;
-use blockless_sdk::read_stdin;
+use blockless_sdk::memory::read_stdin;
 use serde_json::json;
 use std::collections::HashMap;
 
-#[cfg_attr(feature = "serde", derive(serde::Serialize))]
-#[derive(Debug)]
+#[derive(Debug, serde::Serialize)]
 struct CoinPrice {
     id: String,
     price: u64,

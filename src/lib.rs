@@ -1,16 +1,20 @@
-mod bless_crawl;
-mod cgi;
-mod error;
-mod llm;
-mod memory;
-mod socket;
-
-pub mod http;
+#[cfg(feature = "rpc")]
 pub mod rpc;
 
-pub use bless_crawl::*;
-pub use cgi::*;
-pub use error::*;
-pub use llm::*;
-pub use memory::*;
-pub use socket::*;
+#[cfg(feature = "cgi")]
+pub mod cgi;
+
+#[cfg(feature = "llm")]
+pub mod llm;
+
+#[cfg(feature = "memory")]
+pub mod memory;
+
+#[cfg(feature = "socket")]
+pub mod socket;
+
+#[cfg(feature = "http")]
+pub mod http;
+
+#[cfg(feature = "bless-crawl")]
+pub mod bless_crawl;
