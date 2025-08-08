@@ -6,7 +6,7 @@
 
 1. Install the rust with rustup, please visit the site 'https://rustup.rs/'.
 
-2. Use follow command for build the project.
+2. Use the following command to build the project.
 
 ```bash
 cargo build --release --target wasm32-wasip1
